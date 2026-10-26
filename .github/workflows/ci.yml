@@ -53,6 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     strategy:
+      fail-fast: false
       matrix:
         flavor: [dev, staging, prod]
     steps:
@@ -78,6 +79,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 40
     strategy:
+      fail-fast: false
       matrix:
         flavor: [dev, staging, prod]
     steps:
