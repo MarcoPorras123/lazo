@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "fractional",
+      "money": {
+        "amountMinor": 1.5,
+        "currency": "PEN"
+      }
+    },
+    {
+      "name": "unsupported-currency",
+      "money": {
+        "amountMinor": 35,
+        "currency": "USD"
+      }
+    },
+    {
+      "name": "unsafe-integer",
+      "money": {
+        "amountMinor": 9007199254740992,
+        "currency": "EUR"
+      }
+    },
+    {
+      "name": "string-not-integer",
+      "money": {
+        "amountMinor": "3500",
+        "currency": "PEN"
+      }
+    },
+    {
+      "name": "unknown-field",
+      "money": {
+        "amountMinor": 3500,
+        "currency": "PEN",
+        "extra": true
+      }
+    }
+  ]
+}

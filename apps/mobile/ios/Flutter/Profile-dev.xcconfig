@@ -1,0 +1,4 @@
+#include "Release.xcconfig"
+// Select lib/main_dev.dart via Flutter --target.
+LAZO_ENV = dev
+APP_DISPLAY_NAME = Lazo DEV

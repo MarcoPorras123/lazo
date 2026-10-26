@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "invalid-uuid",
+      "response": {
+        "schemaVersion": 1,
+        "environment": "dev",
+        "version": "0.1.0",
+        "serverTime": "2026-10-25T12:34:56.000Z",
+        "correlationId": "not-a-uuid"
+      }
+    },
+    {
+      "name": "unknown-field",
+      "response": {
+        "schemaVersion": 1,
+        "environment": "dev",
+        "version": "0.1.0",
+        "serverTime": "2026-10-25T12:34:56.000Z",
+        "correlationId": "ae9f0b93-cb63-4d01-b401-c2cc26af8e2a",
+        "extra": true
+      }
+    },
+    {
+      "name": "unsupported-version",
+      "response": {
+        "schemaVersion": 2,
+        "environment": "dev",
+        "version": "0.1.0",
+        "serverTime": "2026-10-25T12:34:56.000Z",
+        "correlationId": "ae9f0b93-cb63-4d01-b401-c2cc26af8e2a"
+      }
+    },
+    {
+      "name": "missing-milliseconds",
+      "response": {
+        "schemaVersion": 1,
+        "environment": "dev",
+        "version": "0.1.0",
+        "serverTime": "2026-10-25T12:34:56Z",
+        "correlationId": "ae9f0b93-cb63-4d01-b401-c2cc26af8e2a"
+      }
+    },
+    {
+      "name": "non-utc",
+      "response": {
+        "schemaVersion": 1,
+        "environment": "dev",
+        "version": "0.1.0",
+        "serverTime": "2026-10-25T14:34:56.000+02:00",
+        "correlationId": "ae9f0b93-cb63-4d01-b401-c2cc26af8e2a"
+      }
+    },
+    {
+      "name": "invalid-day",
+      "response": {
+        "schemaVersion": 1,
+        "environment": "dev",
+        "version": "0.1.0",
+        "serverTime": "2026-02-30T12:34:56.000Z",
+        "correlationId": "ae9f0b93-cb63-4d01-b401-c2cc26af8e2a"
+      }
+    },
+    {
+      "name": "empty-version",
+      "response": {
+        "schemaVersion": 1,
+        "environment": "dev",
+        "version": "",
+        "serverTime": "2026-10-25T12:34:56.000Z",
+        "correlationId": "ae9f0b93-cb63-4d01-b401-c2cc26af8e2a"
+      }
+    },
+    {
+      "name": "long-version",
+      "response": {
+        "schemaVersion": 1,
+        "environment": "dev",
+        "version": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "serverTime": "2026-10-25T12:34:56.000Z",
+        "correlationId": "ae9f0b93-cb63-4d01-b401-c2cc26af8e2a"
+      }
+    }
+  ]
+}

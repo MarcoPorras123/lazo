@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Paso 1: no hay lecturas ni escrituras operativas desde la app.
+    // Paso 3 añadirá permisos explícitos; Admin SDK debe autorizar en servidor.
+    match /auditLogs/{id} {
+      allow read, create, update, delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

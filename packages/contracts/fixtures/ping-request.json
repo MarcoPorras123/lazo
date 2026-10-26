@@ -1,0 +1,4 @@
+{
+  "schemaVersion": 1,
+  "idempotencyKey": "contract-ping-key-0001"
+}

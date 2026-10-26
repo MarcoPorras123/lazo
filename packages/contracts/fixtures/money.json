@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "pen",
+      "money": {
+        "amountMinor": 3500,
+        "currency": "PEN"
+      },
+      "formatted": "S/ 35,00"
+    },
+    {
+      "name": "eur",
+      "money": {
+        "amountMinor": 3500,
+        "currency": "EUR"
+      },
+      "formatted": "35,00 €"
+    },
+    {
+      "name": "zero",
+      "money": {
+        "amountMinor": 0,
+        "currency": "PEN"
+      },
+      "formatted": "S/ 0,00"
+    },
+    {
+      "name": "negative",
+      "money": {
+        "amountMinor": -1,
+        "currency": "PEN"
+      },
+      "formatted": "S/ -0,01"
+    },
+    {
+      "name": "maximum-safe",
+      "money": {
+        "amountMinor": 9007199254740991,
+        "currency": "EUR"
+      },
+      "formatted": "90.071.992.547.409,91 €"
+    }
+  ],
+  "percentages": [
+    {
+      "amountMinor": 3500,
+      "currency": "PEN",
+      "basisPoints": 1500,
+      "expectedMinor": 525
+    },
+    {
+      "amountMinor": 1,
+      "currency": "EUR",
+      "basisPoints": 5000,
+      "expectedMinor": 1
+    },
+    {
+      "amountMinor": -1,
+      "currency": "EUR",
+      "basisPoints": 5000,
+      "expectedMinor": -1
+    },
+    {
+      "amountMinor": 1,
+      "currency": "PEN",
+      "basisPoints": 4999,
+      "expectedMinor": 0
+    },
+    {
+      "amountMinor": 9007199254740991,
+      "currency": "EUR",
+      "basisPoints": 10000,
+      "expectedMinor": 9007199254740991
+    }
+  ]
+}

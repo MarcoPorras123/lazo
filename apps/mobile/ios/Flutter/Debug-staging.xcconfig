@@ -1,0 +1,4 @@
+#include "Debug.xcconfig"
+// Select lib/main_staging.dart via Flutter --target.
+LAZO_ENV = staging
+APP_DISPLAY_NAME = Lazo STAGING

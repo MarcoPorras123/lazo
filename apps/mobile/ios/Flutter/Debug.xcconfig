@@ -1,0 +1,4 @@
+#include "Generated.xcconfig"
+
+LAZO_ENV = dev
+APP_DISPLAY_NAME = Lazo DEV

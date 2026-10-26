@@ -1,0 +1,22 @@
+{
+  "functions": [{
+    "source": "backend/functions",
+    "codebase": "lazo",
+    "runtime": "nodejs22",
+    "ignore": ["node_modules", ".git", "test", "coverage", "*.log", ".env.example"],
+    "predeploy": ["npm --prefix backend/functions run lint", "npm --prefix backend/functions run build"]
+  }],
+  "firestore": {
+    "rules": "backend/firestore/firestore.rules",
+    "indexes": "backend/firestore/firestore.indexes.json"
+  },
+  "storage": { "rules": "backend/firestore/storage.rules" },
+  "emulators": {
+    "auth": { "host": "127.0.0.1", "port": 9099 },
+    "functions": { "host": "127.0.0.1", "port": 5001 },
+    "firestore": { "host": "127.0.0.1", "port": 8080 },
+    "storage": { "host": "127.0.0.1", "port": 9199 },
+    "ui": { "enabled": true, "host": "127.0.0.1", "port": 4000 },
+    "singleProjectMode": true
+  }
+}

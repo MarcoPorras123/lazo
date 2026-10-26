@@ -1,0 +1,4 @@
+#include "Debug.xcconfig"
+// Select lib/main_prod.dart via Flutter --target.
+LAZO_ENV = prod
+APP_DISPLAY_NAME = Lazo
