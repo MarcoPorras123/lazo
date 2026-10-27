@@ -13,21 +13,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/networking/callable_client.dart';
 import '../core/time/location_time.dart';
+import 'bootstrap_failure.dart';
 import 'environment.dart';
 import 'lazo_app.dart';
 import 'providers.dart';
 import 'theme.dart';
 
-Future<void> bootstrap(AppEnvironment environment) async {
+Future<void> bootstrap(
+  AppEnvironment environment, {
+  void Function(BootstrapFailure failure)? onFailure,
+}) async {
   WidgetsFlutterBinding.ensureInitialized();
+  var stage = BootstrapStage.configuration;
   try {
     final config = AppConfig.fromEnvironment(environment);
     config.validate(nativeFlavor: appFlavor);
+    stage = BootstrapStage.timeZones;
     LocationTime.initialize();
 
+    stage = BootstrapStage.firebase;
     final app = config.useEmulators
-        ? await Firebase.initializeApp(demoProjectId: 'demo-lazo')
+        // Firestore's platform delegate also resolves Firebase.app() internally.
+        // Initialize the DEMO default app explicitly, before any plugin is used.
+        ? await Firebase.initializeApp(
+            name: defaultFirebaseAppName,
+            demoProjectId: 'demo-lazo',
+          )
         : await Firebase.initializeApp(options: config.firebaseOptions);
+    if (app.options.projectId != config.projectId) {
+      throw StateError(
+        'Initialized Firebase project does not match this variant',
+      );
+    }
+    stage = BootstrapStage.functions;
     final functions = FirebaseFunctions.instanceFor(
       app: app,
       region: config.functionsRegion,
@@ -36,13 +54,16 @@ Future<void> bootstrap(AppEnvironment environment) async {
     if (config.useEmulators) {
       // No App Check backend exists locally. This bypass cannot reach real projects.
       functions.useFunctionsEmulator(config.emulatorHost, 5001);
+      stage = BootstrapStage.authEmulator;
       await FirebaseAuth.instanceFor(
         app: app,
       ).useAuthEmulator(config.emulatorHost, 9099);
+      stage = BootstrapStage.firestoreEmulator;
       FirebaseFirestore.instanceFor(
         app: app,
       ).useFirestoreEmulator(config.emulatorHost, 8080);
     } else {
+      stage = BootstrapStage.appCheck;
       await FirebaseAppCheck.instanceFor(app: app).activate(
         providerAndroid: environment == AppEnvironment.dev
             ? const AndroidDebugProvider()
@@ -51,6 +72,7 @@ Future<void> bootstrap(AppEnvironment environment) async {
             ? const AppleDebugProvider()
             : const AppleAppAttestWithDeviceCheckFallbackProvider(),
       );
+      stage = BootstrapStage.crashlytics;
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
         config.enableCrashlytics,
       );
@@ -66,6 +88,7 @@ Future<void> bootstrap(AppEnvironment environment) async {
       }
     }
 
+    stage = BootstrapStage.app;
     runApp(
       ProviderScope(
         overrides: [
@@ -77,13 +100,14 @@ Future<void> bootstrap(AppEnvironment environment) async {
         child: const LazoApp(),
       ),
     );
-  } catch (_) {
+  } catch (error) {
     // Never render raw platform errors (they can contain config or identifiers).
     runApp(
       MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: provisionalTheme(),
         home: Scaffold(
+          key: const Key('bootstrap-failure'),
           appBar: AppBar(title: Text('Lazo · ${environment.name}')),
           body: const SafeArea(
             child: Padding(
@@ -97,5 +121,6 @@ Future<void> bootstrap(AppEnvironment environment) async {
         ),
       ),
     );
+    onFailure?.call(BootstrapFailure.fromError(stage, error));
   }
 }
