@@ -1,0 +1,71 @@
+name: Lazo native DEMO smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lazo-native-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-dev:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CI: 'true'
+      FUNCTIONS_DISCOVERY_TIMEOUT: '60'
+      GCLOUD_PROJECT: demo-lazo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Prepare Firebase Functions
+        run: |
+          npm ci
+          npm run build
+      - name: Prepare Flutter app
+        working-directory: apps/mobile
+        run: |
+          flutter pub get --enforce-lockfile
+          dart run build_runner build
+          flutter gen-l10n
+          chmod +x android/gradlew
+      - name: Allow this runner user to access KVM
+        run: |
+          test -e /dev/kvm
+          if ! test -r /dev/kvm || ! test -w /dev/kvm; then
+            sudo setfacl -m "u:$(id -un):rw" /dev/kvm
+          fi
+      - name: Run Android app against local Firebase emulators
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          emulator-port: 5554
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          script: node node_modules/firebase-tools/lib/bin/firebase.js emulators:exec --project demo-lazo --only auth,firestore,functions --non-interactive "bash backend/scripts/ci/mobile-smoke.sh"
+      - name: Save smoke test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-dev-demo-smoke
+          path: .tools/mobile-smoke/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
