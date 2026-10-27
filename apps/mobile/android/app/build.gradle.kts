@@ -28,7 +28,8 @@ android {
 
     defaultConfig {
         applicationId = "app.lazo.mobile"
-        minSdk = 23
+        // Flutter 3.47.8 sets API 24, matching the pinned FlutterFire plugins.
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
@@ -61,6 +62,8 @@ android {
         release {
             // Store signing belongs to Step 10. No debug signing for release.
             isMinifyEnabled = false
+            // Flutter enables both shrinking flags; keep them consistent until Step 10.
+            isShrinkResources = false
         }
     }
 }
