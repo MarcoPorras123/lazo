@@ -1,13 +1,21 @@
 const targets = ['dev', 'staging', 'prod'];
+// Staged rollout: dev alone, staging after dev, prod only with all three projects.
+const requiredProjects = { dev: ['dev'], staging: ['dev', 'staging'], prod: ['dev', 'staging', 'prod'] };
+const isRealProject = id => typeof id === 'string' && /^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(id) && !id.startsWith('demo-');
 
 export function validateDeployment({ target, aliases, config, envText, productionRelease }) {
   if (!targets.includes(target)) throw new Error('Entorno no válido.');
-  const projects = targets.map(name => aliases[name]);
-  if (projects.some(id => typeof id !== 'string' || !/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(id) || id.startsWith('demo-'))) {
-    throw new Error('Registrar tres IDs reales de Firebase antes de desplegar.');
+  if (requiredProjects[target].some(name => !isRealProject(aliases[name]))) {
+    throw new Error(`Registrar IDs reales de Firebase para ${requiredProjects[target].join(', ')} antes de desplegar ${target}.`);
   }
-  if (new Set(projects).size !== 3) throw new Error('dev, staging y prod deben ser proyectos diferentes.');
-  if (targets.some(name => config.projects?.[name] !== aliases[name])) throw new Error('Los tres aliases deben coincidir con la configuración aprobada.');
+  const realProjects = targets.map(name => aliases[name]).filter(isRealProject);
+  if (new Set(realProjects).size !== realProjects.length) throw new Error('dev, staging y prod deben ser proyectos diferentes.');
+  for (const name of targets) {
+    const approved = config.projects?.[name];
+    // A project not yet created may stay empty, never point at a real ID missing from .firebaserc.
+    const matches = isRealProject(aliases[name]) ? approved === aliases[name] : !approved || approved === aliases[name];
+    if (!matches) throw new Error('Los aliases deben coincidir con la configuración aprobada.');
+  }
   if (config.dataRegionApproved !== true || !config.functionsRegion || !config.firestoreLocation) throw new Error('Aprobar región de datos antes del despliegue.');
   if (config.appCheckConfigured !== true || config.iamConfigured !== true) throw new Error('Completar App Check e IAM.');
   const values = {};
