@@ -11,7 +11,7 @@
     "test:rules": "node --test backend/firestore/tests/*.test.mjs",
     "test:scripts": "node --test backend/scripts/tests/*.test.mjs",
     "test:emulator:inner": "npm run test:emulator --workspace @lazo/functions && npm run test:rules && npm run smoke:emulator && node backend/scripts/test-seed.mjs",
-    "test:emulator": "npm run build && firebase emulators:exec --project demo-lazo --only auth,firestore,functions \"npm run test:emulator:inner\"",
+    "test:emulator": "npm run build && firebase emulators:exec --project demo-lazo --only auth,firestore,functions,storage \"npm run test:emulator:inner\"",
     "emulators": "node backend/scripts/start-emulators.mjs",
     "seed:demo": "tsx backend/scripts/seed-demo.ts",
     "smoke:emulator": "node backend/scripts/smoke-ping.mjs --emulator",
