@@ -63,6 +63,23 @@ Script exited successfully (code 0)
 
 El artefacto `android-dev-demo-smoke`, ID `12782739480`, conserva el log Flutter durante siete días (vence el 04/11/2026 a las 01:00:57 UTC). El enlace al run y este extracto registran la evidencia aunque expire el artefacto. Resultado conjunto: **119 pruebas de base + 1 prueba nativa = 120 aprobadas**. El alcance nativo es Android dev contra emuladores DEMO, sin credenciales de producción ni proyecto Firebase real.
 
+## Continuidad en Claude Code Cloud — 2026-10-28
+
+La rama `migracion/codex-a-claude` solo añadió documentación sobre `300c79b`. Sus ejecuciones [CI #5](https://github.com/MarcoPorras123/lazo/actions/runs/40650160496), [CI #6](https://github.com/MarcoPorras123/lazo/actions/runs/40652709661) y [CI #7](https://github.com/MarcoPorras123/lazo/actions/runs/40656592927) terminaron PASS; la #7 (`2b1ae3d`) se comprobó job a job: 8/8.
+
+Reproducción en el contenedor Linux de Claude Code (Node 22.22.0, Java 21; sin Flutter):
+
+| Comprobación | Resultado | Límite |
+|---|---|---|
+| `npm run lint` | exit 0 | — |
+| `npm test` | **41/41 PASS** | — |
+| `npm run test:scripts` | **4/4 PASS** | — |
+| `firebase emulators:exec --only firestore "npm run test:emulator --workspace @lazo/functions && npm run test:rules"` | **14/14 + 2/2 PASS** | solo Firestore Emulator |
+| `npm run test:emulator` completo | no ejecutable aquí | `firebase-tools` envía también las peticiones a 127.0.0.1 por `HTTPS_PROXY` (ignora `NO_PROXY`); el proxy del contenedor responde 502 al registrar el trigger Firestore del Functions Emulator. Humo callable y seed quedan cubiertos por el job `functions` de CI |
+| Flutter | no ejecutable aquí | se valida en los jobs `flutter`, `android` e `ios` de CI |
+
+No se desactivó el proxy del entorno. El plan y estado de cierre están en [PLAN_CIERRE_PASO_01.md](PLAN_CIERRE_PASO_01.md).
+
 ## Aceptación externa pendiente
 
 Crear los tres proyectos después de aprobar región; registrar seis apps; configurar App Check/Crashlytics/IAM/CloudTasks/Scheduler/alertas/PITR/backups; ejecutar ping desde app contra Firebase dev real; observar el arranque iOS y staging/prod en ambos sistemas. Android dev ya tiene arranque y humo aprobados en emulador. El CI de fundamentos verde acredita análisis, pruebas y compilaciones, con los límites descritos; no acredita conectividad a Firebase real ni una app preparada para distribución.
