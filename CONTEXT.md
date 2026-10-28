@@ -148,12 +148,12 @@ Tema Material3 provisional en apps/mobile/lib/app/theme.dart, color semilla #183
 |---|---|---|---|
 | Money/tiempo TypeScript | sí |41 pruebas unit/contratos del backend; incluye Madrid29/03/2026 y25/10/2026 | política comercial aprobada |
 | Money/tiempo Dart | sí | suite Flutter 58/58 PASS en CI #4; mismos fixtures, límites, rounding, Lima/Madrid | política comercial aprobada |
-| Idempotencia/auditoría/outbox | sí |14 pruebas emulador backend incl concurrencia, conflicto, rollback, duplicado, backoff, fallo, lease/desorden | alertas cloud y consumidores comerciales |
+| Idempotencia/auditoría/outbox | sí |18 pruebas emulador backend incl concurrencia, conflicto, rollback, duplicado, backoff, fallo, lease/desorden y barrido que continúa tras un fallo por evento | alertas cloud y consumidores comerciales |
 | requireScope | esqueleto cerrado | tests alcance/mercado/local | identidad/permisos finales Paso3 |
-| Deferred jobs | DEMO transaccional + adaptador Tasks | test del worker/dedupe local | IAM/cola/Scheduler reales |
-| Reglas Firestore/Storage | denegación por defecto |2 pruebas Firestore negativas, incluso dueño simulado | nuevas reglas por recurso Paso3; pruebas Storage futuras |
+| Deferred jobs | DEMO transaccional + adaptador Tasks | test del worker/dedupe local; adaptador con cola simulada (ID estable, task-already-exists) y encolado programado que continúa tras un fallo | IAM/cola/Scheduler reales |
+| Reglas Firestore/Storage | denegación por defecto |3 pruebas negativas: 2 Firestore y 1 Storage (anónimo y tres roles, incluso dueño con claim admin) | nuevas reglas por recurso Paso3 |
 | system.ping | sí | callable HTTP emulador responde y rechaza contrato inválido; humo app Android dev → callable PASS | dev real y recorrido iOS |
-| App Flutter/variantes | código y configuración | flutter analyze sin incidencias y 58/58 tests PASS; CI #4 compiló Android/iOS Simulator dev/staging/prod; humo Android dev PASS | arranque iOS y staging/prod con configuración real |
+| App Flutter/variantes | código y configuración | flutter analyze sin incidencias, formato verificado en CI y 59/59 tests PASS (incluye región Functions obligatoria en entornos reales); CI #4 compiló Android/iOS Simulator dev/staging/prod; humo Android dev PASS | arranque iOS y staging/prod con configuración real |
 | Entornos | aliases DEMO, ejemplos, parámetros, guardias | arranque local; seed rechaza otro proyecto/host | crear dev/staging/prod y registrar apps |
 | Seed DEMO | sí |2 ejecuciones:2 locales/8 servicios/2 eventos procesados/2 recibos; sin duplicar; rechaza producción/host remoto | nada para emulador |
 | Guardias despliegue | sí |4/4 tests: aliases distintos, parámetros persistidos, cuentas por proyecto y protección prod | aprobación/configuración de recursos reales |
@@ -179,7 +179,7 @@ Tema Material3 provisional en apps/mobile/lib/app/theme.dart, color semilla #183
 ## 7. Decisiones pendientes y supuestos
 | Tema | Supuesto vigente | Qué falta decidir | Paso afectado |
 |---|---|---|---|
-| Región de datos | europe-west1 solo propuesta/local | requisitos PE/ES, latencia, residencia, costes antes crear Firestore |1/10 |
+| Región de datos | europe-west1 solo propuesta/local; [propuesta D](docs/PROPUESTA_INFRAESTRUCTURA_FIREBASE.md) la recomienda (Cloud Tasks no existe en Madrid ni Santiago) | aprobación del dueño, validación legal PE/ES y medición de latencia Lima |1/10 |
 | Proyectos Firebase | usuario confirmó que no existen; pidió preparar config/emuladores | IDs/cuenta/organización/facturación |1/10 |
 | Apps registradas | app.lazo.mobile.dev / .staging / prod sin sufijo | titularidad/IDs finales y registro Android/iOS |1/10 |
 | Locales España | Madrid solo DEMO; cada local guarda IANA real | ubicaciones reales (incluye Canarias si aplica) |3/4 |
