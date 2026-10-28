@@ -54,9 +54,9 @@ Plan **Blaze obligatorio** (Functions, bucket por defecto, Tasks y Scheduler). T
 
 | ID | Cambio | Por qué | Obligatorio |
 |---|---|---|---|
-| P1 | La guardia `deployment-config.mjs` permite desplegar **dev** con staging/prod todavía sin crear. Exige: el ID del destino real; IDs reales distintos entre sí; staging requiere dev + staging; **prod sigue exigiendo los tres** y `LAZO_PRODUCTION_RELEASE`. Con pruebas | hoy la guardia exige los tres proyectos reales antes de desplegar dev, lo que contradice la estrategia por etapas | **sí** |
-| P2 | En la variante dev, `APP_CHECK_DEBUG_TOKEN` opcional vía `--dart-define` para `AndroidDebugProvider`/`AppleDebugProvider(debugToken: …)`. Rechazado en staging/prod | permite pruebas repetibles contra DEV (también en CI) sin leer el token de los registros del dispositivo | recomendado |
-| P3 | `backend/scripts/latency-ping.mjs`: canjea el token de depuración de App Check (API REST `exchangeDebugToken`) y llama a `system-ping` N veces. Informa p50/p95/mín/máx y el primer arranque en frío por separado. Rechaza staging/prod; lee los valores de variables de entorno, nunca del repositorio | medición de latencia desde Lima sin modificar la app ni relajar App Check | recomendado |
+| P1 ✅ `45aa96d` | La guardia `deployment-config.mjs` permite desplegar **dev** con staging/prod todavía sin crear. Exige: el ID del destino real; IDs reales distintos entre sí; staging requiere dev + staging; **prod sigue exigiendo los tres** y `LAZO_PRODUCTION_RELEASE`. Con pruebas | hoy la guardia exige los tres proyectos reales antes de desplegar dev, lo que contradice la estrategia por etapas | **sí** |
+| P2 ✅ `b1a7354` | En la variante dev, `APP_CHECK_DEBUG_TOKEN` opcional vía `--dart-define` para `AndroidDebugProvider`/`AppleDebugProvider(debugToken: …)`. Rechazado en staging/prod | permite pruebas repetibles contra DEV (también en CI) sin leer el token de los registros del dispositivo | recomendado |
+| P3 ✅ | `backend/scripts/latency-ping.mjs`: canjea el token de depuración de App Check (API REST `exchangeDebugToken`) y llama a `system-ping` N veces. Informa p50/p95/mín/máx y el primer arranque en frío por separado. Rechaza staging/prod; lee los valores de variables de entorno, nunca del repositorio | medición de latencia desde Lima sin modificar la app ni relajar App Check | recomendado |
 | P4 | Workflow manual «Lazo DEV real smoke» (Android e iOS) que lee la configuración pública y el token de depuración desde **GitHub Actions secrets** | probar iOS contra DEV sin un Mac propio | opcional; requiere crear los secretos |
 
 Tras P1, `npm run test:scripts` debe seguir en verde con las nuevas pruebas.
@@ -130,7 +130,22 @@ Desde Claude Code Cloud **no** puedo desplegar: no tengo credenciales de Google 
     Con P2 añade el token de depuración como `--dart-define`. Criterio: «All tests passed!» y en los registros de la función `verifications.app = VALID`.
 19. **iOS contra DEV real:** en un Mac propio con la misma orden, o con P4 en CI (macOS) usando secretos. Criterio: el mismo.
 20. **Prueba negativa:** sin token de depuración registrado, la llamada debe rechazarse (App Check obligatorio).
-21. **Latencia desde Lima** (P3, en tu ordenador en Lima): 1 llamada en frío registrada aparte, después 50 llamadas en caliente. Registrar p50/p95/mín/máx, fecha y tipo de conexión. Como referencia opcional, el mismo script desde un runner de GitHub (EE. UU.).
+21. **Latencia desde Lima** (P3, en tu ordenador en Lima). Requiere el ID DEV en `.firebaserc` y un token de depuración registrado en App Check. En PowerShell, sin guardar los valores en archivos:
+    ```powershell
+    $env:LAZO_DEV_PROJECT_ID = "lazo-dev-bw"
+    $env:LAZO_FIREBASE_API_KEY = Read-Host "API key DEV"
+    $env:LAZO_FIREBASE_APP_ID = Read-Host "App ID Android DEV"
+    $env:LAZO_APPCHECK_DEBUG_TOKEN = Read-Host "Token de depuración"
+    npm run latency:dev -- --count 50 --label "Lima <tipo de conexión>"
+    ```
+    El script:
+    - Rechaza staging, prod, los alias `demo-*` y cualquier ID distinto del alias dev.
+    - Canjea el token de depuración en App Check.
+    - Mide la primera llamada aparte (puede incluir un arranque en frío) y luego N llamadas en caliente, con un tiempo de espera por llamada (`--timeout-ms`, 10 000 por defecto).
+    - Informa mín/p50/p95/máx/media, fallos por tipo (`http-NNN`, `timeout`, `network-error`, `invalid-response`) y el tiempo del canje.
+    - `--json` produce la salida para registrar. Nunca imprime el token ni la clave.
+
+    Repetir en dos momentos del día y anotar el tipo de conexión. Como referencia opcional, el mismo script desde un runner de GitHub (EE. UU.).
 22. **Alerta `OUTBOX_FAILED`:** Monitoring → alerta basada en registros con filtro `jsonPayload.alertType="OUTBOX_FAILED"` y canal de correo. La prueba de disparo queda para staging (§4 de security.md) salvo que la quieras también en DEV.
 23. **Claude** registra la evidencia (enlaces, resultados y límites) en `docs/verification.md`, `CONTEXT.md` y el plan de cierre, y actualiza `docs/security.md` con los permisos IAM efectivos.
 

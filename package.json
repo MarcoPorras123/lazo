@@ -15,6 +15,7 @@
     "emulators": "node backend/scripts/start-emulators.mjs",
     "seed:demo": "tsx backend/scripts/seed-demo.ts",
     "smoke:emulator": "node backend/scripts/smoke-ping.mjs --emulator",
+    "latency:dev": "node backend/scripts/latency-ping.mjs",
     "deploy:checked": "node backend/scripts/deploy.mjs"
   },
   "devDependencies": {
