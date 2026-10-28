@@ -85,6 +85,7 @@ final class AppConfig {
     }
     final requiredValues = [
       projectId,
+      functionsRegion,
       apiKey,
       androidAppId,
       iosAppId,

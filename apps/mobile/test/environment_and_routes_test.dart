@@ -40,6 +40,25 @@ void main() {
     expect(() => prod.validate(), throwsStateError);
   });
 
+  test('real environments require an approved Functions region', () {
+    AppConfig real(String region) => AppConfig(
+      environment: AppEnvironment.staging,
+      useEmulators: false,
+      projectId: 'lazo-staging-test',
+      functionsRegion: region,
+      apiKey: 'public-api-key',
+      androidAppId: '1:1:android:1',
+      iosAppId: '1:1:ios:1',
+      messagingSenderId: '1',
+    );
+    expect(() => real('europe-west1').validate(), returnsNormally);
+    expect(() => real('').validate(), throwsStateError);
+    expect(
+      () => real('REPLACE_WITH_APPROVED_REGION').validate(),
+      throwsStateError,
+    );
+  });
+
   test('diagnostics cannot be reached in prod', () {
     expect(
       routeRedirect('/diagnostics', prod, const SessionSnapshot.signedOut()),
