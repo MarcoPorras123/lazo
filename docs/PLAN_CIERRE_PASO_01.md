@@ -82,18 +82,18 @@ Leyenda: ✅ cumplido · 🟡 parcial · ⛔ bloqueado por recurso externo o dec
 
 | ID | Tarea | Depende de | Criterio de aceptación | Estado |
 |---|---|---|---|---|
-| B1 | Validar `functionsRegion` en `AppConfig.validate()` con test | A2 | Test nuevo; `flutter analyze` limpio; Flutter PASS en CI | pendiente |
-| B2 | Aislar errores por elemento en `sweep()` y `enqueuePending` | A3 | Prueba emulador: un evento que lanza no impide procesar el siguiente; previas PASS | pendiente |
-| B3 | Prueba de Storage rules y Storage en `test:emulator` | A3 | Lectura/escritura denegadas a anónimo y roles; CI verde | pendiente |
-| B4 | Prueba del adaptador `enqueueDeferredJob` con cola simulada | A3 | Cubre ID estable, `task-already-exists`, estado `enqueued` | pendiente |
-| B5 | Comprobación `dart format` en CI | A2 | Código ya formateado; CI verde | pendiente |
+| B1 | Validar `functionsRegion` en `AppConfig.validate()` con test | A2 | Test nuevo; `flutter analyze` limpio; Flutter PASS en CI | ✅ 2026-10-28 `12379a8`: Flutter 3.47.8 instalado en el contenedor, analyze limpio, 59/59 PASS |
+| B2 | Aislar errores por elemento en `sweep()` y `enqueuePending` | A3 | Prueba emulador: un evento que lanza no impide procesar el siguiente; previas PASS | ✅ 2026-10-28 `d6a0409`: sweep y `enqueuePendingJobs()` aislados; emulador 18/18 |
+| B3 | Prueba de Storage rules y Storage en `test:emulator` | A3 | Lectura/escritura denegadas a anónimo y roles; CI verde | ✅ 2026-10-28 `d30a5c2`: reglas 3/3; falla si las reglas se vuelven permisivas |
+| B4 | Prueba del adaptador `enqueueDeferredJob` con cola simulada | A3 | Cubre ID estable, `task-already-exists`, estado `enqueued` | ✅ 2026-10-28 `d6a0409`: cola Cloud Tasks simulada |
+| B5 | Comprobación `dart format` en CI | A2 | Código ya formateado; CI verde | ✅ 2026-10-28 `36b1457`: formateado `test/money_test.dart`; paso de formato PASS en CI #11 |
 
 ### Bloque C — Aceptación nativa sin nube (autorizado)
 
 | ID | Tarea | Depende de | Criterio de aceptación | Estado |
 |---|---|---|---|---|
-| C1 | Job manual de humo iOS Simulator dev contra emuladores DEMO (macOS) en mobile-smoke.yml | A2 | `system_ping_test.dart` PASS en iOS Simulator; evidencia en verification.md | pendiente |
-| C2 | Prueba de arranque staging/prod sin configuración real: pantalla de «configuración incompleta» sin fallo nativo | A2 | Integration test PASS. **No equivale** a arrancar contra Firebase real | pendiente |
+| C1 | Job manual de humo iOS Simulator dev contra emuladores DEMO (macOS) en mobile-smoke.yml | A2 | `system_ping_test.dart` PASS en iOS Simulator; evidencia en verification.md | en curso `d3b3bfd`: [humo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045) |
+| C2 | Prueba de arranque staging/prod sin configuración real: pantalla de «configuración incompleta» sin fallo nativo | A2 | Integration test PASS. **No equivale** a arrancar contra Firebase real | en curso `d3b3bfd`: mismo humo, Android e iOS |
 
 ### Bloque D — Infraestructura Firebase (NO autorizado; solo propuesta)
 
