@@ -61,8 +61,16 @@ void main() {
 
   test('minimum native integer cannot bypass the safe JSON bounds', () {
     final minimumNative = int.parse('-9223372036854775808');
-    expect(() => Money(amountMinor: minimumNative, currency: Currency.PEN), throwsRangeError);
-    expect(() => Money(amountMinor: 1, currency: Currency.PEN)
-        .percentage(minimumNative, rounding: RoundingMode.halfUp), throwsRangeError);
+    expect(
+      () => Money(amountMinor: minimumNative, currency: Currency.PEN),
+      throwsRangeError,
+    );
+    expect(
+      () => Money(
+        amountMinor: 1,
+        currency: Currency.PEN,
+      ).percentage(minimumNative, rounding: RoundingMode.halfUp),
+      throwsRangeError,
+    );
   });
 }
