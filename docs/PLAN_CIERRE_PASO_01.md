@@ -95,12 +95,14 @@ Leyenda: ✅ cumplido · 🟡 parcial · ⛔ bloqueado por recurso externo o dec
 | C1 | Job manual de humo iOS Simulator dev contra emuladores DEMO (macOS) en mobile-smoke.yml | A2 | `system_ping_test.dart` PASS en iOS Simulator; evidencia en verification.md | ✅ 2026-10-28 `d3b3bfd`: [humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045), job ios-dev PASS (iPhone Simulator) |
 | C2 | Prueba de arranque staging/prod sin configuración real: pantalla de «configuración incompleta» sin fallo nativo | A2 | Integration test PASS. **No equivale** a arrancar contra Firebase real | ✅ 2026-10-28 `d3b3bfd`: staging y prod PASS en Android e iOS (falla cerrado en `configuration`) |
 
-### Bloque D — Infraestructura Firebase (NO autorizado; solo propuesta)
+### Bloque D — Infraestructura Firebase (por etapas: D-DEV → D-STAGING → D-PROD)
+
+Guía de la primera etapa: [GUIA_FIREBASE_DEV.md](GUIA_FIREBASE_DEV.md). Preparación sin infraestructura completada el 2026-10-28: P1 `45aa96d` (guardia por etapas), P2 `b1a7354` (token App Check solo dev), P3 `508e5c1` (latencia). P4 aplazado. Blaze y creación de recursos externos **no autorizados** todavía.
 
 | ID | Tarea | Depende de | Criterio de aceptación | Estado |
 |---|---|---|---|---|
-| D1 | Aprobar región de datos (ADR 0007) | — | ADR «aceptada» | bloqueado: decisión del dueño |
-| D2 | Crear proyectos dev/staging/prod (facturación, IDs); actualizar .firebaserc y config local | D1 | `npm run test:scripts` PASS con IDs reales; sin secretos en Git | bloqueado |
+| D1 | Aprobar región de datos (ADR 0007) | — | ADR «aceptada» | DEV: `europe-west1` aprobada por el dueño el 2026-10-28. Prod: pendiente |
+| D2 | Crear proyectos por etapas (DEV primero: `lazo-dev-bw` sujeto a disponibilidad, presupuesto USD 10); actualizar .firebaserc y config local | D1 | `npm run test:scripts` PASS con IDs reales; sin secretos en Git | DEV: pendiente de autorizar Blaze y cuenta de facturación; staging/prod: después de validar DEV |
 | D3 | Registrar 6 apps; App Check; Crashlytics | D2 | Crash de prueba de staging visible en consola | bloqueado |
 | D4 | IAM, Cloud Tasks, Scheduler, alerta `OUTBOX_FAILED`, PITR, backups | D2 | Checklist de security.md con evidencia | bloqueado |
 | D5 | Desplegar dev con `npm run deploy:checked -- dev` | D2–D4 | `smoke-ping` contra dev PASS | bloqueado: requiere autorización |

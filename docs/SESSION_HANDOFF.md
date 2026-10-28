@@ -6,7 +6,7 @@ Paso 1 de 10 — Fundamentos.
 
 ## Estado
 
-Implementado (no verificado). Coincide con CONTEXT.md. Los bloques A, B y C de [PLAN_CIERRE_PASO_01.md](PLAN_CIERRE_PASO_01.md) están completados. El bloque D (Firebase real) **no está autorizado**: solo existe su [propuesta](PROPUESTA_INFRAESTRUCTURA_FIREBASE.md).
+Implementado (no verificado). Coincide con CONTEXT.md. Bloques A, B y C de [PLAN_CIERRE_PASO_01.md](PLAN_CIERRE_PASO_01.md) completados y aprobados. Bloque D en curso **por etapas** (D-DEV → D-STAGING → D-PROD): solo la preparación de código de D-DEV está hecha. **No hay infraestructura creada.**
 
 ## Origen
 
@@ -16,32 +16,37 @@ Proyecto iniciado con OpenAI Codex y migrado a Claude Code Cloud.
 
 migracion/codex-a-claude (no modificar main; sin force push).
 
-## Sesión 2026-10-28 — resultado
+## Decisiones del dueño (2026-10-28)
 
-- A1–A5 ✅ rama sincronizada, CI #7 comprobada, suite backend reproducida en el contenedor, documentación alineada y escapes Markdown retirados.
-- B1 ✅ región de Functions obligatoria en entornos reales (`12379a8`).
-- B2 + B4 ✅ barridos outbox/jobs aislados por elemento; adaptador Cloud Tasks probado (`d6a0409`).
-- B3 ✅ prueba de Storage rules; Storage en `test:emulator` (`d30a5c2`).
-- B5 ✅ `dart format` en CI (`36b1457`).
-- C1 + C2 ✅ humo iOS y arranque staging/prod sin configuración (`d3b3bfd`); [humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045) PASS en Android e iOS.
-- [CI #12](https://github.com/MarcoPorras123/lazo/actions/runs/40661489586) 8/8 PASS sobre `99f52d3`. Pruebas base: 125; nativas: 6.
-- Propuesta del bloque D redactada (región recomendada `europe-west1`: Cloud Tasks no existe en Madrid ni en Santiago).
+- Región DEV: `europe-west1`. No es una decisión para prod.
+- ID DEV propuesto: `lazo-dev-bw`, sujeto a disponibilidad. Se puede publicar en `.firebaserc` una vez confirmado.
+- Presupuesto DEV: USD 10/mes con alertas al 50 %, 90 % y 100 %. La cuenta de facturación y los destinatarios se confirmarán en la consola.
+- **No autorizados todavía:** Blaze, creación de recursos externos, despliegues, credenciales.
+- P4 (workflow y secretos contra Firebase real) aplazado.
+
+## Sesión 2026-10-28 — D-DEV preparatorio
+
+- P1 ✅ `45aa96d`: la guardia de despliegue permite dev sin staging/prod; prod sigue exigiendo los tres proyectos y `LAZO_PRODUCTION_RELEASE`. Pruebas de guardias 8/8.
+- P2 ✅ `b1a7354`: `APP_CHECK_DEBUG_TOKEN` solo en dev debug; rechazado en staging/prod, release y si no es UUID; eliminado del binario release. Flutter 60/60.
+- P3 ✅ `508e5c1`: `npm run latency:dev` (p50/p95, fallos, timeouts, primera llamada aparte). Pruebas de scripts 12/12.
+- Verificación local completa: lint; 41 unitarias; 18 de integración; 3 de reglas; 12 de scripts; 60 Flutter.
 
 ## Notas de entorno (Claude Code Cloud)
 
-- Flutter no viene instalado: se descarga la 3.47.8 al scratchpad (ver docs/verification.md).
-- `npm run test:emulator` completo no funciona en el contenedor: `firebase-tools` envía también las peticiones locales por `HTTPS_PROXY`. Usar `firebase emulators:exec --only firestore[,storage]` para las suites de integración y reglas, y CI para el resto.
-- Cada push a la rama cancela la CI en curso (concurrencia): agrupar commits antes de subir.
+- Flutter no viene instalado: se descarga la 3.47.8 al scratchpad.
+- `npm run test:emulator` completo no funciona en el contenedor por el proxy: usar `firebase emulators:exec --only firestore,storage` para integración y reglas, y CI para el resto.
+- Cada push a la rama cancela la CI en curso: agrupar commits.
 
 ## Próxima tarea
 
-Esperar la decisión del dueño sobre el bloque D (§9 de la propuesta). Sin esa autorización no quedan microtareas ejecutables del Paso 1. No empezar el Paso 2.
+El dueño ejecuta la Fase A de [GUIA_FIREBASE_DEV.md](GUIA_FIREBASE_DEV.md) cuando autorice Blaze. Primero comprobar la disponibilidad del ID `lazo-dev-bw`. Con el ID confirmado, Claude actualiza `.firebaserc` y prepara las plantillas locales. No empezar el Paso 2.
 
 ## Restricciones
 
 - No reconstruir funcionalidades verificadas.
 - No comenzar el paso 2.
-- No modificar producción ni crear recursos cloud.
+- No modificar producción ni crear recursos cloud sin autorización explícita.
 - No marcar el paso 1 como verificado sin pruebas.
 - No presentar un arranque con configuración incompleta como prueba contra Firebase real.
+- Ningún token, clave ni archivo de configuración real en GitHub.
 - Actualizar este archivo al finalizar cada sesión.
