@@ -1,88 +1,61 @@
+# LAZO — Instrucciones para Claude Code
 
-
-\# LAZO — Instrucciones para Claude Code
-
-
-
-\## Origen del proyecto
-
-
+## Origen del proyecto
 
 Este proyecto fue desarrollado inicialmente con OpenAI Codex.
 
 Ahora continuará en Claude Code Cloud.
 
-
-
-\## Contexto heredado
-
-
+## Contexto heredado
 
 @CONTEXT.md
 
-
-
-\## Documentación técnica
-
-
+## Documentación técnica
 
 Antes de modificar código, revisar:
 
-\- README.md
+- README.md
 
-\- docs/mobile.md
+- docs/mobile.md
 
-\- docs/verification.md
+- docs/verification.md
 
+## Reglas obligatorias
 
+1. Preservar la arquitectura y funcionalidades existentes.
 
-\## Reglas obligatorias
+2. No reconstruir módulos terminados.
 
+3. Respetar las decisiones técnicas anteriores.
 
+4. No cambiar tecnologías sin autorización.
 
-1\. Preservar la arquitectura y funcionalidades existentes.
+5. Revisar Git antes de realizar modificaciones.
 
-2\. No reconstruir módulos terminados.
+6. No eliminar archivos sin aprobación.
 
-3\. Respetar las decisiones técnicas anteriores.
+7. No desplegar cambios en producción sin autorización.
 
-4\. No cambiar tecnologías sin autorización.
+8. Validar y probar las modificaciones.
 
-5\. Revisar Git antes de realizar modificaciones.
+9. Documentar decisiones importantes.
 
-6\. No eliminar archivos sin aprobación.
-
-7\. No desplegar cambios en producción sin autorización.
-
-8\. Validar y probar las modificaciones.
-
-9\. Documentar decisiones importantes.
-
-
-
-\## Primera tarea
-
-
+## Primera tarea
 
 Realizar una auditoría del estado del proyecto.
 
-
-
 Identificar:
 
-\- Arquitectura actual.
+- Arquitectura actual.
 
-\- Funcionalidades completadas.
+- Funcionalidades completadas.
 
-\- Funcionalidades parcialmente implementadas.
+- Funcionalidades parcialmente implementadas.
 
-\- Errores existentes.
+- Errores existentes.
 
-\- Integraciones y dependencias.
+- Integraciones y dependencias.
 
-\- Funcionalidades pendientes.
-
-
+- Funcionalidades pendientes.
 
 Presentar el diagnóstico antes de modificar código.
-
