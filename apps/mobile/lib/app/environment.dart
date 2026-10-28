@@ -15,6 +15,7 @@ final class AppConfig {
     this.iosAppId = '',
     this.messagingSenderId = '',
     this.storageBucket = '',
+    this.appCheckDebugToken = '',
   });
 
   factory AppConfig.fromEnvironment(AppEnvironment environment) {
@@ -48,6 +49,11 @@ final class AppConfig {
         'FIREBASE_MESSAGING_SENDER_ID',
       ),
       storageBucket: const String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
+      // Local secret via --dart-define. The constant kReleaseMode branch keeps
+      // the value out of release (distribution) binaries entirely.
+      appCheckDebugToken: kReleaseMode
+          ? ''
+          : const String.fromEnvironment('APP_CHECK_DEBUG_TOKEN'),
     );
   }
 
@@ -62,13 +68,30 @@ final class AppConfig {
   final String messagingSenderId;
   final String storageBucket;
 
+  /// App Check debug secret registered in the dev Firebase console.
+  final String appCheckDebugToken;
+
   bool get showDiagnostics => environment != AppEnvironment.prod;
   bool get enableCrashlytics =>
       environment != AppEnvironment.dev && !useEmulators;
 
-  void validate({String? nativeFlavor}) {
+  void validate({String? nativeFlavor, bool releaseMode = kReleaseMode}) {
     if (nativeFlavor != null && nativeFlavor != environment.name) {
       throw StateError('Native flavor and entry point must match');
+    }
+    if (appCheckDebugToken.isNotEmpty) {
+      // Debug attestation bypasses App Check: only local dev debug builds.
+      if (environment != AppEnvironment.dev || releaseMode) {
+        throw StateError(
+          'App Check debug token is restricted to dev debug builds',
+        );
+      }
+      if (!RegExp(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        caseSensitive: false,
+      ).hasMatch(appCheckDebugToken)) {
+        throw StateError('App Check debug token must be a UUID');
+      }
     }
     if (useEmulators) {
       if (environment != AppEnvironment.dev || projectId != 'demo-lazo') {

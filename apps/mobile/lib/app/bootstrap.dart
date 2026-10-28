@@ -64,12 +64,16 @@ Future<void> bootstrap(
       ).useFirestoreEmulator(config.emulatorHost, 8080);
     } else {
       stage = BootstrapStage.appCheck;
+      // validate() already restricts a fixed debug token to dev debug builds.
+      final debugToken = config.appCheckDebugToken.isEmpty
+          ? null
+          : config.appCheckDebugToken;
       await FirebaseAppCheck.instanceFor(app: app).activate(
         providerAndroid: environment == AppEnvironment.dev
-            ? const AndroidDebugProvider()
+            ? AndroidDebugProvider(debugToken: debugToken)
             : const AndroidPlayIntegrityProvider(),
         providerApple: environment == AppEnvironment.dev
-            ? const AppleDebugProvider()
+            ? AppleDebugProvider(debugToken: debugToken)
             : const AppleAppAttestWithDeviceCheckFallbackProvider(),
       );
       stage = BootstrapStage.crashlytics;

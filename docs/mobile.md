@@ -49,6 +49,14 @@ Los puertos son Functions 5001, Auth 9099 y Firestore 8080. En un teléfono Andr
 
 En desarrollo local App Check no se inicia porque no tiene backend emulado. Ese caso exige simultáneamente variante dev y proyecto `demo-lazo`. En dev conectado a la nube sí se usa el proveedor de depuración; sus tokens se registran directamente en Firebase Console, nunca en el repositorio ni en el chat.
 
+Para pruebas repetibles contra Firebase DEV real se puede fijar el token de depuración con `--dart-define=APP_CHECK_DEBUG_TOKEN=<uuid>`. Lo mejor es leerlo de una variable de entorno local, por ejemplo `--dart-define=APP_CHECK_DEBUG_TOKEN=$LAZO_APPCHECK_DEBUG_TOKEN`, sin escribirlo en archivos versionados ni en registros compartidos. Antes, el token debe registrarse en Firebase Console → App Check → Gestionar tokens de depuración del proyecto dev. Garantías del código (`AppConfig.validate`):
+
+- Se rechaza en staging y prod: la app muestra la pantalla de configuración incompleta.
+- Se rechaza si no tiene formato UUID.
+- En compilaciones release, `kReleaseMode` hace que el valor ni siquiera se lea: el compilador lo elimina del binario de distribución (comprobado con una compilación AOT de control el 2026-10-28).
+
+Si el token se expone, revócalo en la consola.
+
 ## Configurar Firebase real después de crear los proyectos
 
 1. Confirmar región e IDs de proyecto en `CONTEXT.md`; registrar cada applicationId/bundle ID en su proyecto correspondiente.

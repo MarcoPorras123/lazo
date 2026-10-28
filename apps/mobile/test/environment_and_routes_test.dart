@@ -59,6 +59,45 @@ void main() {
     );
   });
 
+  test('App Check debug token is limited to dev debug builds', () {
+    const token = '00000000-0000-4000-8000-000000000000';
+    AppConfig withToken(AppEnvironment environment, String value) => AppConfig(
+      environment: environment,
+      useEmulators: false,
+      projectId: 'lazo-${environment.name}-test',
+      apiKey: 'public-api-key',
+      androidAppId: '1:1:android:1',
+      iosAppId: '1:1:ios:1',
+      messagingSenderId: '1',
+      appCheckDebugToken: value,
+    );
+    expect(
+      () => withToken(AppEnvironment.dev, token).validate(releaseMode: false),
+      returnsNormally,
+    );
+    expect(
+      () => withToken(AppEnvironment.dev, '').validate(releaseMode: true),
+      returnsNormally,
+    );
+    for (final environment in [AppEnvironment.staging, AppEnvironment.prod]) {
+      expect(
+        () => withToken(environment, token).validate(releaseMode: false),
+        throwsStateError,
+      );
+    }
+    expect(
+      () => withToken(AppEnvironment.dev, token).validate(releaseMode: true),
+      throwsStateError,
+    );
+    expect(
+      () => withToken(
+        AppEnvironment.dev,
+        'not-a-token',
+      ).validate(releaseMode: false),
+      throwsStateError,
+    );
+  });
+
   test('diagnostics cannot be reached in prod', () {
     expect(
       routeRedirect('/diagnostics', prod, const SessionSnapshot.signedOut()),
