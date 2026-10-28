@@ -2,6 +2,12 @@ name: Lazo native DEMO smoke
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Native platform to run
+        type: choice
+        options: [all, android, ios]
+        default: all
 
 permissions:
   contents: read
@@ -12,12 +18,14 @@ concurrency:
 
 jobs:
   android-dev:
+    if: inputs.platform != 'ios'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     env:
       CI: 'true'
       FUNCTIONS_DISCOVERY_TIMEOUT: '60'
       GCLOUD_PROJECT: demo-lazo
+      SMOKE_PLATFORM: android
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -65,6 +73,60 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-dev-demo-smoke
+          path: .tools/mobile-smoke/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
+
+  ios-dev:
+    if: inputs.platform != 'android'
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      CI: 'true'
+      FUNCTIONS_DISCOVERY_TIMEOUT: '60'
+      GCLOUD_PROJECT: demo-lazo
+      SMOKE_PLATFORM: ios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Prepare Firebase Functions
+        run: |
+          npm ci
+          npm run build
+      - name: Prepare Flutter app
+        working-directory: apps/mobile
+        run: |
+          flutter pub get --enforce-lockfile
+          dart run build_runner build
+          flutter gen-l10n
+      - name: Boot an iPhone simulator
+        run: |
+          udid="$(xcrun simctl list devices available -j \
+            | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')"
+          test -n "$udid" && test "$udid" != null
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          echo "SMOKE_IOS_DEVICE=$udid" >> "$GITHUB_ENV"
+      - name: Run iOS app against local Firebase emulators
+        run: node node_modules/firebase-tools/lib/bin/firebase.js emulators:exec --project demo-lazo --only auth,firestore,functions --non-interactive "bash backend/scripts/ci/mobile-smoke.sh"
+      - name: Save smoke test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-dev-demo-smoke
           path: .tools/mobile-smoke/
           include-hidden-files: true
           if-no-files-found: ignore
