@@ -80,8 +80,27 @@ Reproducción en el contenedor Linux de Claude Code (Node 22.22.0, Java 21; sin 
 
 No se desactivó el proxy del entorno. El plan y estado de cierre están en [PLAN_CIERRE_PASO_01.md](PLAN_CIERRE_PASO_01.md).
 
+## Humo nativo #3 — Android e iOS (2026-10-28)
+
+[humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045) sobre `d3b3bfd`, lanzado desde la rama `migracion/codex-a-claude` con `platform=all`. Ambos jobs **PASS**:
+
+| Job | Prueba | Resultado |
+|---|---|---|
+| `android-dev` (Android Emulator API 34) | `system_ping_test.dart`, flavor dev, emuladores DEMO | PASS — «app -> callable system-ping -> typed diagnostic result», All tests passed! |
+| `android-dev` | `unconfigured_launch_test.dart`, flavor staging | PASS |
+| `android-dev` | `unconfigured_launch_test.dart`, flavor prod | PASS |
+| `ios-dev` (iPhone Simulator, macOS) | `system_ping_test.dart`, flavor dev, emuladores DEMO | PASS — All tests passed! |
+| `ios-dev` | `unconfigured_launch_test.dart`, flavor staging | PASS |
+| `ios-dev` | `unconfigured_launch_test.dart`, flavor prod | PASS |
+
+Artefactos `android-dev-demo-smoke` (ID 12804676942) e `ios-dev-demo-smoke` (ID 12806538080), con siete días de retención.
+
+**Límite de la evidencia:** staging y prod arrancan de forma nativa y muestran la pantalla de configuración incompleta (etapa `configuration`). Eso **no** equivale a arrancar contra su proyecto Firebase, que todavía no existe. Dev se probó contra emuladores DEMO, no contra Firebase dev real.
+
+**CI de fundamentos:** [CI #12](https://github.com/MarcoPorras123/lazo/actions/runs/40661489586) sobre `99f52d3`: 8/8 PASS. Incluye el nuevo paso `dart format`, 59 pruebas Flutter y `npm run test:emulator` con Storage (18 de integración, 3 de reglas, humo callable y seed). Total de pruebas base vigente: **125** (41 unitarias/contratos + 18 integración Firestore + 3 reglas + 4 guardias + 59 Flutter), más **6 nativas**.
+
 ## Aceptación externa pendiente
 
-Crear los tres proyectos después de aprobar región; registrar seis apps; configurar App Check/Crashlytics/IAM/CloudTasks/Scheduler/alertas/PITR/backups; ejecutar ping desde app contra Firebase dev real; observar el arranque iOS y staging/prod en ambos sistemas. Android dev ya tiene arranque y humo aprobados en emulador. El CI de fundamentos verde acredita análisis, pruebas y compilaciones, con los límites descritos; no acredita conectividad a Firebase real ni una app preparada para distribución.
+Crear los tres proyectos después de aprobar región; registrar seis apps; configurar App Check/Crashlytics/IAM/CloudTasks/Scheduler/alertas/PITR/backups; ejecutar ping desde app contra Firebase dev real; observar el arranque de staging/prod contra sus proyectos. Android e iOS dev ya tienen arranque y humo aprobados contra emuladores; staging/prod arrancan y fallan cerrados sin configuración. El CI de fundamentos verde acredita análisis, pruebas y compilaciones, con los límites descritos; no acredita conectividad a Firebase real ni una app preparada para distribución.
 
 Reproducir en este equipo: preparar PATH portable según deployment.md y ejecutar `npm run lint`, `npm test`, `npm run test:scripts`, `npm run test:emulator`. El directorio OneDrive puede ralentizar discovery; establecer `FUNCTIONS_DISCOVERY_TIMEOUT=60` si se ejecuta el CLI manualmente. El workflow y el arranque seguro ya lo configuran.

@@ -88,21 +88,21 @@ flutter build apk --debug --flavor dev --target lib/main_dev.dart --dart-define-
 
 La prueba de integración necesita un emulador/dispositivo Android o iOS iniciado; `flutter test` a secas ejecuta tests unitarios y de widgets sin dispositivo. Para verificar dev real, ejecutar la misma prueba de integración con `config/dev.local.json` y App Check configurado. En macOS se puede compilar `flutter build ios --simulator --flavor dev --target lib/main_dev.dart --dart-define-from-file=config/dev.emulator.ios.json`.
 
-Las evidencias ejecutadas y los pendientes están en `CONTEXT.md` y `docs/verification.md`. La ejecución #4 de GitHub Actions aprobó los ocho jobs, incluidas las compilaciones Android e iOS Simulator para dev/staging/prod, y 58 pruebas Flutter. Además, el [segundo humo Android dev](https://github.com/MarcoPorras123/lazo/actions/runs/40611649473) aprobó el arranque y la conexión app → `system.ping` con emuladores, tras corregir la inicialización Firebase predeterminada DEMO en `300c79b`. Las compilaciones iOS y staging/prod todavía requieren verificar arranque y configuración real.
+Las evidencias ejecutadas y los pendientes están en `CONTEXT.md` y `docs/verification.md`. La ejecución #4 de GitHub Actions aprobó los ocho jobs, incluidas las compilaciones Android e iOS Simulator para dev/staging/prod, y 58 pruebas Flutter. Además, el [segundo humo Android dev](https://github.com/MarcoPorras123/lazo/actions/runs/40611649473) aprobó el arranque y la conexión app → `system.ping` con emuladores, tras corregir la inicialización Firebase predeterminada DEMO en `300c79b`. El [humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045) amplió la comprobación a iOS Simulator y al arranque de staging/prod sin configuración en ambos sistemas. Falta arrancar cada variante contra su proyecto Firebase real.
 
 ## Humo nativo manual en GitHub Actions
 
-El workflow `.github/workflows/mobile-smoke.yml`, **Lazo native DEMO smoke**, inicia un Android Emulator API 34 y Firebase Emulator Suite en el mismo runner. Después ejecuta `integration_test/system_ping_test.dart` en la app dev. El helper `backend/scripts/ci/mobile-smoke.sh` exige el proyecto `demo-lazo` y hosts loopback; no requiere un proyecto Firebase real ni secretos.
+El workflow `.github/workflows/mobile-smoke.yml`, **Lazo native DEMO smoke**, tiene dos jobs, `android-dev` (Android Emulator API 34) e `ios-dev` (iPhone Simulator en macOS), cada uno con Firebase Emulator Suite en el mismo runner. Ambos ejecutan `integration_test/system_ping_test.dart` en la app dev y `integration_test/unconfigured_launch_test.dart` en staging y prod sin configuración Firebase. La entrada `platform` (`all`, `android`, `ios`) elige los jobs. El helper `backend/scripts/ci/mobile-smoke.sh` exige el proyecto `demo-lazo` y hosts loopback; no requiere un proyecto Firebase real ni secretos.
 
 Se inicia desde Actions → Lazo native DEMO smoke → Run workflow → rama `main`, o mediante GitHub CLI con sesión autorizada:
 
 ```sh
-gh workflow run mobile-smoke.yml --repo MarcoPorras123/lazo --ref main
+gh workflow run mobile-smoke.yml --repo MarcoPorras123/lazo --ref main -f platform=all
 gh run list --workflow mobile-smoke.yml --repo MarcoPorras123/lazo
 gh run watch <RUN_ID> --repo MarcoPorras123/lazo --exit-status
 ```
 
-El log Flutter se conserva durante siete días como artefacto `android-dev-demo-smoke`, cuando la ejecución alcanza esa fase. El alcance es Android dev → callable `system.ping` en emuladores DEMO. No acredita App Check real, Firebase dev cloud, staging/prod, iOS, firma ni distribución. El resultado comprobado de cada ejecución se registra en `docs/verification.md`.
+Los logs Flutter se conservan siete días como artefactos `android-dev-demo-smoke` e `ios-dev-demo-smoke`, cuando la ejecución alcanza esa fase. El alcance es dev → callable `system.ping` en emuladores DEMO y el arranque nativo de staging/prod que falla cerrado sin configuración. No acredita App Check real, Firebase dev cloud, conexión de staging/prod a sus proyectos, firma ni distribución. El resultado comprobado de cada ejecución se registra en `docs/verification.md`.
 
 ## Referencias oficiales
 

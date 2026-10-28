@@ -37,23 +37,23 @@ Leyenda: ✅ cumplido · 🟡 parcial · ⛔ bloqueado por recurso externo o dec
 | 5 | system.ping y diagnóstico solo en dev/staging | ✅ | functions/src/index.ts, apps/mobile/lib/app/router.dart |
 | 6 | data-model.md: 43 colecciones, índices, paginación, retención, región, backups | ✅ | data-model.md, security.md, 34 índices |
 | 7 | Catálogo de eventos | ✅ | CONTEXT.md §3.3, `eventNames` |
-| 8 | Reglas con denegación por defecto; IAM documentado | ✅ Firestore / 🟡 Storage sin prueba | storage.rules deniega todo pero no hay prueba |
+| 8 | Reglas con denegación por defecto; IAM documentado | ✅ | Firestore y Storage con pruebas negativas (B3) |
 | 9 | CI (Flutter, Functions, emulador, reglas, Android, iOS) y seed DEMO | ✅ | .github/workflows/ci.yml, backend/scripts/seed-demo.ts |
 | Pruebas | Money, Tiempo (29/03 y 25/10/2026), Idempotencia, Outbox, Reglas, Contratos | ✅ | docs/verification.md |
-| Pruebas | Humo app → system.ping en emulador | ✅ Android / 🟡 iOS sin ejecutar | |
+| Pruebas | Humo app → system.ping en emulador | ✅ Android e iOS | humo nativo #3 (C1) |
 | Pruebas | Humo app → system.ping en dev | ⛔ | proyecto dev inexistente |
 
 ### Criterios de aceptación originales
 
 | # | Criterio | Estado |
 |---|---|---|
-| 1 | La app arranca en Android e iOS en las tres variantes, cada una contra su proyecto | 🟡⛔ las 6 variantes compilan; solo Android dev arrancó (emulador DEMO) |
+| 1 | La app arranca en Android e iOS en las tres variantes, cada una contra su proyecto | 🟡⛔ las 6 variantes compilan y arrancan; dev contra emuladores DEMO; staging/prod fallan cerrados sin configuración (C2). Falta arrancar contra proyectos reales (D7) |
 | 2 | system.ping responde desde el emulador y desde dev | 🟡⛔ emulador sí; dev inexistente |
-| 3 | CI en verde | ✅ CI #7 8/8 PASS |
+| 3 | CI en verde | ✅ CI #12 8/8 PASS sobre `99f52d3` |
 | 4 | Modelo de datos, catálogo de eventos y ADR documentados | ✅ |
-| 5 | CONTEXT.md creado y completo | ✅ (pendiente registrar migración: A4) |
+| 5 | CONTEXT.md creado y completo | ✅ migración y bloques A–C registrados |
 
-**Conclusión:** el Paso 1 está «implementado», no «verificado». Los criterios 1 y 2 dependen del bloque D, excepto el arranque iOS contra emuladores (C1).
+**Conclusión:** el Paso 1 está «implementado», no «verificado». Con A, B y C completados, lo que falta de los criterios 1 y 2 depende solo del bloque D (Firebase real).
 
 ## 3. Hallazgos técnicos
 
@@ -92,8 +92,8 @@ Leyenda: ✅ cumplido · 🟡 parcial · ⛔ bloqueado por recurso externo o dec
 
 | ID | Tarea | Depende de | Criterio de aceptación | Estado |
 |---|---|---|---|---|
-| C1 | Job manual de humo iOS Simulator dev contra emuladores DEMO (macOS) en mobile-smoke.yml | A2 | `system_ping_test.dart` PASS en iOS Simulator; evidencia en verification.md | en curso `d3b3bfd`: [humo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045) |
-| C2 | Prueba de arranque staging/prod sin configuración real: pantalla de «configuración incompleta» sin fallo nativo | A2 | Integration test PASS. **No equivale** a arrancar contra Firebase real | en curso `d3b3bfd`: mismo humo, Android e iOS |
+| C1 | Job manual de humo iOS Simulator dev contra emuladores DEMO (macOS) en mobile-smoke.yml | A2 | `system_ping_test.dart` PASS en iOS Simulator; evidencia en verification.md | ✅ 2026-10-28 `d3b3bfd`: [humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045), job ios-dev PASS (iPhone Simulator) |
+| C2 | Prueba de arranque staging/prod sin configuración real: pantalla de «configuración incompleta» sin fallo nativo | A2 | Integration test PASS. **No equivale** a arrancar contra Firebase real | ✅ 2026-10-28 `d3b3bfd`: staging y prod PASS en Android e iOS (falla cerrado en `configuration`) |
 
 ### Bloque D — Infraestructura Firebase (NO autorizado; solo propuesta)
 

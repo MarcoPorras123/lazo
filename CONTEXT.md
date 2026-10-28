@@ -5,7 +5,7 @@
 ## 1. Estado por paso
 | Paso | Estado | Fecha | Evidencia | Notas |
 |---|---|---|---|---|
-| 1 Fundamentos | implementado | 2026-10-28 | [Verificación](docs/verification.md):119 pruebas base + 1 humo nativo PASS; [CI #4](https://github.com/MarcoPorras123/lazo/actions/runs/40537922488) 8/8 PASS y [humo Android dev](https://github.com/MarcoPorras123/lazo/actions/runs/40611649473) PASS sobre 300c79b | Seis compilaciones Android/iOS y arranque Android dev con ping emulado comprobados. Falta arranque iOS/staging/prod y humo dev real; proyectos Firebase no creados por decisión del usuario. Continuidad en Claude Code: [plan de cierre](docs/PLAN_CIERRE_PASO_01.md). |
+| 1 Fundamentos | implementado | 2026-10-28 | [Verificación](docs/verification.md): 125 pruebas base + 6 nativas PASS; [CI #12](https://github.com/MarcoPorras123/lazo/actions/runs/40661489586) 8/8 PASS sobre 99f52d3 y [humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045) PASS sobre d3b3bfd (Android e iOS) | Seis compilaciones Android/iOS; Android e iOS dev arrancan y reciben system.ping emulado; staging/prod arrancan en ambos sistemas y fallan cerrados sin configuración (no es conexión a su proyecto). Falta arranque contra proyectos reales y humo dev real; proyectos Firebase no creados por decisión del usuario. Continuidad en Claude Code: [plan de cierre](docs/PLAN_CIERRE_PASO_01.md). |
 | 2 Sistema de diseño | pendiente | | | |
 | 3 Identidad y mercados | pendiente | | | |
 | 4 Reservas | pendiente | | | |
@@ -153,11 +153,11 @@ Tema Material3 provisional en apps/mobile/lib/app/theme.dart, color semilla #183
 | Deferred jobs | DEMO transaccional + adaptador Tasks | test del worker/dedupe local; adaptador con cola simulada (ID estable, task-already-exists) y encolado programado que continúa tras un fallo | IAM/cola/Scheduler reales |
 | Reglas Firestore/Storage | denegación por defecto |3 pruebas negativas: 2 Firestore y 1 Storage (anónimo y tres roles, incluso dueño con claim admin) | nuevas reglas por recurso Paso3 |
 | system.ping | sí | callable HTTP emulador responde y rechaza contrato inválido; humo app Android dev → callable PASS | dev real y recorrido iOS |
-| App Flutter/variantes | código y configuración | flutter analyze sin incidencias, formato verificado en CI y 59/59 tests PASS (incluye región Functions obligatoria en entornos reales); CI #4 compiló Android/iOS Simulator dev/staging/prod; humo Android dev PASS | arranque iOS y staging/prod con configuración real |
+| App Flutter/variantes | código y configuración | flutter analyze sin incidencias, formato verificado en CI y 59/59 tests PASS (incluye región Functions obligatoria en entornos reales); CI #12 compiló Android/iOS Simulator dev/staging/prod; [humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045): ping dev emulado PASS en Android e iOS y arranque staging/prod sin configuración PASS en ambos | arranque de cada variante contra su proyecto real |
 | Entornos | aliases DEMO, ejemplos, parámetros, guardias | arranque local; seed rechaza otro proyecto/host | crear dev/staging/prod y registrar apps |
 | Seed DEMO | sí |2 ejecuciones:2 locales/8 servicios/2 eventos procesados/2 recibos; sin duplicar; rechaza producción/host remoto | nada para emulador |
 | Guardias despliegue | sí |4/4 tests: aliases distintos, parámetros persistidos, cuentas por proyecto y protección prod | aprobación/configuración de recursos reales |
-| CI | workflow ejecutado y aprobado | [CI #4](https://github.com/MarcoPorras123/lazo/actions/runs/40537922488) sobre 300c79b:8/8 jobs PASS; [humo nativo](https://github.com/MarcoPorras123/lazo/actions/runs/40611649473) PASS; 120 pruebas entre ambas ejecuciones | mantener evidencia al cambiar código; nube y firma fuera de estas pruebas |
+| CI | workflow ejecutado y aprobado | [CI #12](https://github.com/MarcoPorras123/lazo/actions/runs/40661489586) sobre 99f52d3: 8/8 jobs PASS (incluye formato Dart y Storage en la suite de emuladores); [humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045) Android + iOS PASS; 125 base + 6 nativas | mantener evidencia al cambiar código; nube y firma fuera de estas pruebas |
 | Modelo/ADR/eventos | sí |43 colecciones,34 índices,7 ADR,21 eventos incluidos probe | mantener contratos al avanzar |
 
 ## 6. Integraciones externas
@@ -187,8 +187,8 @@ Tema Material3 provisional en apps/mobile/lib/app/theme.dart, color semilla #183
 | Retención y replay | expiraciones90d no activan TTL | ventanas por endpoint/proveedor, conservación y baja |3/5/7/8/9/10 |
 | Datos personales de staff | proyecciones separadas diseñadas | campos mínimos permitidos por recorrido |3/4/6 |
 | Reglas comerciales | sin precios/premios/cancelaciones aprobadas | configuración versionada y fuente |4/5/6/9 |
-| Firma y ejecución nativa | CI compila Android/iOS tres variantes; arranque y humo Android dev DEMO aprobados | arranque iOS y staging/prod, humo dev real y firma de distribución |1/10 |
-| CI remoto | CI #4 verificado 8/8 PASS y humo separado PASS para 300c79b; 119+1 pruebas | mantener resultado al cambiar código; ampliar humo a iOS y nube cuando exista |1/10 |
+| Firma y ejecución nativa | CI compila Android/iOS tres variantes; humo dev DEMO aprobado en Android e iOS; staging/prod arrancan y fallan cerrados sin configuración | arranque staging/prod contra sus proyectos, humo dev real y firma de distribución |1/10 |
+| CI remoto | CI #12 8/8 PASS (99f52d3) y humo nativo #3 Android + iOS PASS (d3b3bfd); 125 + 6 pruebas | mantener resultado al cambiar código; ampliar humo a nube cuando exista |1/10 |
 
 ## 8. Auditorías visuales
 | Fecha | Alcance | Hallazgos abiertos (bloqueante, alta, media, baja) | Informe |
@@ -207,7 +207,7 @@ Seed local: GCLOUD_PROJECT=demo-lazo y FIRESTORE_EMULATOR_HOST=127.0.0.1:8080, l
 Desde apps/mobile: flutter pub get --enforce-lockfile; dart run build_runner build --delete-conflicting-outputs; flutter gen-l10n; flutter analyze; flutter test.
 Ejecutar Android dev: flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=config/dev.emulator.json. iOS Simulator usa dev.emulator.ios.json. Staging/prod usan sus entradas y config/*.local.json completas; no apuntan por defecto a otro proyecto.
 
-Prueba app real: flutter test integration_test/system_ping_test.dart --flavor dev --dart-define-from-file=config/dev.emulator.json -d <dispositivo>. Contra dev real usar config/dev.local.json con USE_FIREBASE_EMULATORS=false y App Check configurado. Humo Android DEMO remoto: Actions → Lazo native DEMO smoke → Run workflow; comandos CLI en docs/mobile.md. La segunda ejecución sobre 300c79b aprobó arranque, navegación y respuesta tipada del ping. Dev real e iOS siguen pendientes.
+Prueba app real: flutter test integration_test/system_ping_test.dart --flavor dev --dart-define-from-file=config/dev.emulator.json -d <dispositivo>. Contra dev real usar config/dev.local.json con USE_FIREBASE_EMULATORS=false y App Check configurado. Humo nativo DEMO remoto (Android e iOS, entrada platform all/android/ios): Actions → Lazo native DEMO smoke → Run workflow; comandos CLI en docs/mobile.md. La ejecución #3 sobre d3b3bfd aprobó en Android e iOS el ping dev emulado y el arranque de staging/prod sin configuración. Dev real sigue pendiente.
 
 Despliegue: completar pasos/guardias de deployment.md, luego npm run deploy:checked -- dev (o staging/prod). No ejecutar con IDs demo. Nunca pegar secretos; Secret Manager y configuración por proveedor. El emulador no acredita IAM, App Check real, backups o CI verde.
 
@@ -223,3 +223,4 @@ Despliegue: completar pasos/guardias de deployment.md, luego npm run deploy:chec
 | 2026-10-27 |1 | Inicialización Firebase DEMO corregida en 300c79b; CI #4 verificado 8/8 PASS con 119 pruebas, segundo humo 40611649473 en curso | diagnóstico de arranque saneado; contratos públicos sin cambios |
 | 2026-10-28 |1 | Cierre documental tras verificar humo 40611649473 aprobado el 27/10 a las 20:00 Lima: Android dev arranca y recibe system.ping emulado; 119 pruebas base + 1 nativa = 120 PASS; evidencia y enlaces públicos actualizados | contratos sin cambios; aceptación cloud/iOS/staging/prod pendiente según alcance documentado |
 | 2026-10-28 |1 | Migración de Codex a Claude Code Cloud (rama migracion/codex-a-claude, commits 327a3dc/8bc0ea0/2b1ae3d solo documentación). [CI #5](https://github.com/MarcoPorras123/lazo/actions/runs/40650160496), [#6](https://github.com/MarcoPorras123/lazo/actions/runs/40652709661) y [#7](https://github.com/MarcoPorras123/lazo/actions/runs/40656592927) PASS (#7: 8/8). Auditoría frente al prompt completo y [plan de cierre](docs/PLAN_CIERRE_PASO_01.md) con microtareas A–D; bloque D (Firebase real) no autorizado. Reproducción local en contenedor: 41 unit + 14 emulador + 2 reglas + 4 guardias PASS. Escapes Markdown retirados de CLAUDE.md, SESSION_HANDOFF y prompt Paso1 | contratos sin cambios |
+| 2026-10-28 |1 | Bloques B y C del [plan de cierre](docs/PLAN_CIERRE_PASO_01.md): región Functions obligatoria en la app, barridos outbox/jobs aislados por elemento, prueba del adaptador Cloud Tasks, prueba de Storage rules, formato Dart en CI, humo iOS y arranque staging/prod sin configuración. [CI #12](https://github.com/MarcoPorras123/lazo/actions/runs/40661489586) 8/8 PASS; [humo nativo #3](https://github.com/MarcoPorras123/lazo/actions/runs/40661071045) Android + iOS PASS. [Propuesta bloque D](docs/PROPUESTA_INFRAESTRUCTURA_FIREBASE.md) sin ejecutar | contratos públicos sin cambios; jobs.enqueuePending usa enqueuePendingJobs() |
