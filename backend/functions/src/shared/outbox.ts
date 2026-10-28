@@ -169,7 +169,12 @@ export class OutboxDispatcher {
       this.db.collection('outbox').where('status', '==', 'pending').where('nextAttemptAt', '<=', now).orderBy('nextAttemptAt').limit(limit).get(),
       this.db.collection('outbox').where('status', '==', 'processing').where('leaseUntil', '<=', now).orderBy('leaseUntil').limit(limit).get(),
     ]);
-    for (const doc of [...pending.docs, ...abandoned.docs]) await this.dispatch(doc.id);
+    for (const doc of [...pending.docs, ...abandoned.docs]) {
+      // One failing event must not block the rest; the next sweep picks it up again.
+      try { await this.dispatch(doc.id); } catch (error) {
+        logger.warn('outbox.sweep_item_failed', { eventId: doc.id, error: error instanceof Error ? error.name : 'unknown' });
+      }
+    }
     return pending.size + abandoned.size;
   }
 

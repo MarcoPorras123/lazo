@@ -1,4 +1,5 @@
 import { getFunctions } from 'firebase-admin/functions';
+import { logger } from 'firebase-functions';
 import { Timestamp, type Firestore, type Transaction } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { idSchema, scopeSchema, type Scope } from './contracts';
@@ -46,6 +47,19 @@ export async function enqueueDeferredJob(db: Firestore, jobId: string, region: s
     const current = await tx.get(reference);
     if (current.get('status') === 'pending') tx.update(reference, { status: 'enqueued', updatedAt: Timestamp.now() });
   });
+}
+
+/** Bounded scan of jobs due within a day; one failing job must not block the rest (next run retries it). */
+export async function enqueuePendingJobs(db: Firestore, region: string, now: Date, limit = 100): Promise<number> {
+  const pending = await db.collection('jobs').where('status', '==', 'pending')
+    .where('executeAt', '<=', Timestamp.fromMillis(now.getTime() + 86_400_000))
+    .orderBy('executeAt').limit(limit).get();
+  for (const job of pending.docs) {
+    try { await enqueueDeferredJob(db, job.id, region); } catch (error) {
+      logger.warn('jobs.enqueue_failed', { jobId: job.id, error: error instanceof Error ? error.name : 'unknown' });
+    }
+  }
+  return pending.size;
 }
 
 /** DEMO worker only: the durable job record is the deduplication boundary. */

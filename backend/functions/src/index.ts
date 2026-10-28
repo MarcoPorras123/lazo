@@ -9,7 +9,7 @@ import { logger } from 'firebase-functions';
 import { appVersion, environment, isFunctionsEmulator, region, systemServiceAccount, workerServiceAccount } from './shared/config';
 import { asHttpsError } from './shared/errors';
 import { hash } from './shared/hash';
-import { enqueueDeferredJob, executeDeferredProbe } from './shared/jobs';
+import { enqueuePendingJobs, executeDeferredProbe } from './shared/jobs';
 import { OutboxDispatcher, type TransactionalConsumer } from './shared/outbox';
 import { createPingResponse } from './shared/ping';
 
@@ -65,9 +65,6 @@ export const jobs = {
   }),
   enqueuePending: onSchedule({ ...runtime, serviceAccount: workerServiceAccount,
     schedule: 'every 1 minutes', timeZone: 'UTC', timeoutSeconds: 120 }, async () => {
-    const pending = await db.collection('jobs').where('status', '==', 'pending')
-      .where('executeAt', '<=', Timestamp.fromMillis(Date.now() + 86_400_000))
-      .orderBy('executeAt').limit(100).get();
-    for (const job of pending.docs) await enqueueDeferredJob(db, job.id, region.value());
+    await enqueuePendingJobs(db, region.value(), new Date());
   }),
 };

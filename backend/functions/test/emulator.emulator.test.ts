@@ -6,7 +6,14 @@ import { requireScope } from '../src/authorization/require-scope';
 import { executeIdempotent } from '../src/shared/idempotency';
 import { appendOutbox, OutboxDispatcher, type TransactionalConsumer } from '../src/shared/outbox';
 import { FixedClock } from '../src/shared/time';
-import { appendDeferredProbe, executeDeferredProbe } from '../src/shared/jobs';
+import { appendDeferredProbe, enqueueDeferredJob, enqueuePendingJobs, executeDeferredProbe } from '../src/shared/jobs';
+
+// Cloud Tasks is not emulated here: a fake queue records enqueue calls.
+const { enqueue, taskQueue } = vi.hoisted(() => {
+  const enqueue = vi.fn<(data: unknown, options: { id: string; scheduleTime: Date }) => Promise<void>>();
+  return { enqueue, taskQueue: vi.fn((_name: string) => ({ enqueue })) };
+});
+vi.mock('firebase-admin/functions', () => ({ getFunctions: () => ({ taskQueue }) }));
 
 // Isolate tests from deployed triggers, which use project demo-lazo.
 const projectId = 'demo-lazo-functions-tests';
@@ -175,6 +182,26 @@ describe('Outbox at-least-once, retries and ordering', () => {
     expect(await dispatcher.sweep(1)).toBe(1);
     expect((await db.doc(`outbox/${id}`).get()).get('status')).toBe('completed');
   });
+  it('a sweep keeps dispatching after one event throws', async () => {
+    // Timestamps far in the past isolate this sweep from events of other tests.
+    const past = new Date('2000-01-01T00:00:00.000Z');
+    const [broken, healthy] = [randomUUID(), randomUUID()];
+    for (const [index, id] of [broken, healthy].entries()) {
+      await addEvent(id, id);
+      await db.doc(`outbox/${id}`).update({ nextAttemptAt: Timestamp.fromMillis(past.getTime() + index) });
+    }
+    const consumer: TransactionalConsumer = { id: `sweep-isolation-${healthy}`, events: ['system.probe'], async apply() {} };
+    class FlakyDispatcher extends OutboxDispatcher {
+      override async dispatch(eventId: string) {
+        if (eventId === broken) throw new Error('TRANSIENT');
+        return super.dispatch(eventId);
+      }
+    }
+    const dispatcher = new FlakyDispatcher(db, [consumer], { clock: new FixedClock(new Date(past.getTime() + 1000)) });
+    expect(await dispatcher.sweep(2)).toBe(2);
+    expect((await db.doc(`outbox/${broken}`).get()).get('status')).toBe('pending');
+    expect((await db.doc(`outbox/${healthy}`).get()).get('status')).toBe('completed');
+  });
 });
 
 describe('Authorization and delayed jobs foundations', () => {
@@ -201,5 +228,52 @@ describe('Authorization and delayed jobs foundations', () => {
     const first = (await db.doc(`jobs/${jobId}`).get()).get('updatedAt');
     await executeDeferredProbe(db, request, new Date(now.getTime() + 2000));
     expect((await db.doc(`jobs/${jobId}`).get()).get('updatedAt')).toEqual(first);
+  });
+
+  // Year-2000 schedules isolate these jobs from other tests' pending jobs.
+  const past = new Date('2000-01-01T00:00:00.000Z');
+  async function pastJob(offsetMs = 0): Promise<string> {
+    let jobId = '';
+    await db.runTransaction(async (tx) => { jobId = appendDeferredProbe(db, tx, {
+      scope, executeAt: new Date(past.getTime() + offsetMs), correlationId: randomUUID(), idempotencyKey: randomUUID(),
+    }, past); });
+    return jobId;
+  }
+
+  it('enqueues with the stable job ID and schedule, then only once', async () => {
+    enqueue.mockReset(); taskQueue.mockClear();
+    enqueue.mockResolvedValue(undefined);
+    const jobId = await pastJob();
+    await enqueueDeferredJob(db, jobId, 'europe-west1');
+    await enqueueDeferredJob(db, jobId, 'europe-west1');
+    expect(taskQueue).toHaveBeenCalledWith('locations/europe-west1/functions/jobs-runDue');
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueue).toHaveBeenCalledWith({ schemaVersion: 1, jobId },
+      expect.objectContaining({ id: jobId, scheduleTime: past }));
+    expect((await db.doc(`jobs/${jobId}`).get()).get('status')).toBe('enqueued');
+  });
+
+  it('treats an existing task as enqueued and keeps other failures pending', async () => {
+    enqueue.mockReset();
+    const existing = await pastJob();
+    enqueue.mockRejectedValueOnce(Object.assign(new Error('exists'), { code: 'functions/task-already-exists' }));
+    await enqueueDeferredJob(db, existing, 'europe-west1');
+    expect((await db.doc(`jobs/${existing}`).get()).get('status')).toBe('enqueued');
+    const failing = await pastJob();
+    enqueue.mockRejectedValueOnce(Object.assign(new Error('unavailable'), { code: 14 }));
+    await expect(enqueueDeferredJob(db, failing, 'europe-west1')).rejects.toThrow('unavailable');
+    expect((await db.doc(`jobs/${failing}`).get()).get('status')).toBe('pending');
+    await db.doc(`jobs/${failing}`).update({ status: 'completed' });
+  });
+
+  it('the scheduled enqueue keeps going after one job fails', async () => {
+    enqueue.mockReset();
+    const [broken, healthy] = [await pastJob(1), await pastJob(2)];
+    enqueue.mockImplementation(async (_data, options) => {
+      if (options.id === broken) throw Object.assign(new Error('unavailable'), { code: 14 });
+    });
+    expect(await enqueuePendingJobs(db, 'europe-west1', past)).toBe(2);
+    expect((await db.doc(`jobs/${broken}`).get()).get('status')).toBe('pending');
+    expect((await db.doc(`jobs/${healthy}`).get()).get('status')).toBe('enqueued');
   });
 });
