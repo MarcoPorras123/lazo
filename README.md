@@ -2,9 +2,9 @@
 
 App móvil para Android e iOS de fidelización de clientes y gestión de barberías. El primer negocio previsto es **BlackAndWhite**, con mercados separados para **Perú (PE/PEN)** y **España (ES/EUR)**. La arquitectura admite otros negocios mediante `tenantId → marketId → locationId`.
 
-**Estado actual: Paso 1 — Fundamentos implementados y comprobados localmente.** El repositorio contiene la base técnica, los contratos y la documentación para desarrollar los siguientes pasos. Todavía no hay registro real, reservas, pagos, estrellas, canjes ni una app publicada para clientes.
+**Estado actual: Paso 1 — Fundamentos implementados, CI en verde y prueba nativa Android DEMO aprobada.** Se verificaron 119 pruebas de base y una prueba adicional app → servidor: **120 pruebas aprobadas**. El repositorio contiene la base técnica, los contratos y la documentación para desarrollar los siguientes pasos. Todavía no hay registro real, reservas, pagos, estrellas, canjes ni una app publicada para clientes.
 
-La fuente de verdad es **[CONTEXT.md](CONTEXT.md)**: registra lo construido, las decisiones, los contratos, la evidencia y los pendientes. Los resultados locales del 26/10/2026 están en [docs/verification.md](docs/verification.md).
+La fuente de verdad es **[CONTEXT.md](CONTEXT.md)**: registra lo construido, las decisiones, los contratos, la evidencia y los pendientes. Los resultados locales y remotos, actualizados al 28/10/2026, están en [docs/verification.md](docs/verification.md).
 
 [Repositorio público](https://github.com/MarcoPorras123/lazo) · [GitHub Actions](https://github.com/MarcoPorras123/lazo/actions) · [Issues](https://github.com/MarcoPorras123/lazo/issues)
 
@@ -31,7 +31,7 @@ La fuente de verdad es **[CONTEXT.md](CONTEXT.md)**: registra lo construido, las
 - Idempotencia transaccional, auditoría, outbox con deduplicación/reintentos, autorización por alcance y trabajos diferidos DEMO.
 - Reglas Firestore y Storage con denegación por defecto; seed local protegido contra producción.
 - Diseño de **43 colecciones, 34 índices compuestos, 21 eventos y 7 ADR**. Los contratos de negocio diseñados todavía no son funcionalidades habilitadas.
-- Workflow de CI para pruebas, análisis y compilaciones Android/iOS por variante. Su resultado remoto debe comprobarse en Actions y registrarse en CONTEXT.
+- Workflow de CI para pruebas, análisis y compilaciones Android/iOS por variante: ocho jobs aprobados, incluidas las tres variantes en ambas plataformas.
 
 ## Arquitectura y reglas que deben conservarse
 
@@ -147,7 +147,7 @@ El seed crea BlackAndWhite DEMO, PE/PEN y ES/EUR, locales ilustrativos Lima/Madr
 
 ## Verificación disponible
 
-Evidencia local del **26/10/2026**, detallada en [docs/verification.md](docs/verification.md):
+Evidencia vigente de la [ejecución CI #4](https://github.com/MarcoPorras123/lazo/actions/runs/40537922488), comprobada el **27/10/2026**, y detalle histórico local en [docs/verification.md](docs/verification.md):
 
 | Suite | Resultado |
 |---|---:|
@@ -155,12 +155,16 @@ Evidencia local del **26/10/2026**, detallada en [docs/verification.md](docs/ver
 | Functions: integración con Firestore Emulator | 14/14 |
 | Reglas Firestore | 2/2 |
 | Protecciones de despliegue | 4/4 |
-| Flutter: utilidades, contratos, reintentos, navegación y widgets | 55/55 |
-| **Total** | **116 pruebas aprobadas** |
+| Flutter: utilidades, contratos, reintentos, navegación, widgets y fallos de arranque | 58/58 |
+| **Subtotal de base** | **119 pruebas aprobadas** |
+| Android dev: app → callable system.ping en emuladores DEMO | 1/1 |
+| **Total con humo nativo** | **120 pruebas aprobadas** |
 
 También pasaron TypeScript estricto, ESLint y `flutter analyze`. Se comprobó el ping HTTP callable local y el recorrido seed → Firestore → outbox → trigger → consumidor → recibo de auditoría, sin duplicados.
 
-Esta evidencia no demuestra arranque nativo Android/iOS, conexión a Firebase real ni CI remoto verde. La prueba `apps/mobile/integration_test/system_ping_test.dart` está preparada para ejecutar el recorrido desde un dispositivo; su ejecución continúa pendiente.
+La [ejecución de GitHub Actions #4](https://github.com/MarcoPorras123/lazo/actions/runs/40537922488), sobre `300c79b`, terminó **8/8 jobs aprobados**: Functions, Flutter y compilaciones debug Android/iOS Simulator para dev/staging/prod. El informe conserva las 116 pruebas locales originales del 26/10, la ejecución #3 aprobada y las correcciones posteriores del arranque DEMO.
+
+La [segunda ejecución de humo nativo](https://github.com/MarcoPorras123/lazo/actions/runs/40611649473), sobre el mismo commit `300c79b`, **pasó**: compiló e instaló el APK, arrancó Android dev, abrió Diagnóstico y comprobó la respuesta tipada de `system.ping` desde Firebase Emulator Suite. El primer intento fallido y su corrección se conservan en el informe. Esta evidencia cubre Android dev con datos DEMO; el arranque iOS, staging/prod y la conexión a Firebase real siguen pendientes.
 
 ## Hoja de ruta
 
@@ -184,8 +188,9 @@ Cada paso mantiene CONTEXT y los contratos de los anteriores. Las reglas comerci
 1. Aprobar la región de datos antes de crear Firestore; `europe-west1` es una propuesta. Separar documentos por país no garantiza residencia física.
 2. Crear los tres proyectos Firebase y registrar las seis apps Android/iOS. Los alias `demo-*` actuales sirven para desarrollo local y no representan infraestructura creada.
 3. Configurar IAM, App Check, Crashlytics, Cloud Tasks/Scheduler, alertas, PITR y respaldos; verificar su funcionamiento real.
-4. Compilar y observar el arranque de las tres variantes en Android e iOS, y ejecutar el ping desde la app contra emulador y dev real.
-5. Revisar [las ejecuciones de Actions](https://github.com/MarcoPorras123/lazo/actions), resolver sus resultados y registrar el enlace de la ejecución comprobada. El workflow preparado no es por sí solo evidencia de éxito.
+4. Observar el arranque iOS y de staging/prod en ambos sistemas, y ejecutar el ping desde la app contra dev real. Las seis compilaciones debug y el humo Android dev contra emuladores ya pasaron.
+
+Las [ejecuciones de Actions](https://github.com/MarcoPorras123/lazo/actions) y sus resultados están enlazados en el informe de verificación.
 
 La [guía de despliegue](docs/deployment.md) describe las guardias: proyectos distintos, parámetros persistidos coherentes con el entorno, cuentas por proyecto y control adicional para producción. No hay secretos reales en los archivos de ejemplo.
 

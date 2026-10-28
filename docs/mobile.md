@@ -1,6 +1,6 @@
 # App móvil: fundamentos y variantes
 
-Actualizado: 2026-10-26 · Paso 1. El código usa Flutter 3.47.8 y Dart 3.13.7. `.fvmrc`, `pubspec.yaml` y `pubspec.lock` fijan el SDK y las dependencias. Android e iOS se generaron con las plantillas oficiales de esa versión. Los proyectos Firebase reales todavía no existen; el arranque con emuladores usa exclusivamente `demo-lazo`.
+Actualizado: 2026-10-28 · Paso 1. El código usa Flutter 3.47.8 y Dart 3.13.7. `.fvmrc`, `pubspec.yaml` y `pubspec.lock` fijan el SDK y las dependencias. Android e iOS se generaron con las plantillas oficiales de esa versión. Los proyectos Firebase reales todavía no existen; el arranque con emuladores usa exclusivamente `demo-lazo`.
 
 ## Estructura y límites
 
@@ -88,7 +88,21 @@ flutter build apk --debug --flavor dev --target lib/main_dev.dart --dart-define-
 
 La prueba de integración necesita un emulador/dispositivo Android o iOS iniciado; `flutter test` a secas ejecuta tests unitarios y de widgets sin dispositivo. Para verificar dev real, ejecutar la misma prueba de integración con `config/dev.local.json` y App Check configurado. En macOS se puede compilar `flutter build ios --simulator --flavor dev --target lib/main_dev.dart --dart-define-from-file=config/dev.emulator.ios.json`.
 
-Las evidencias ejecutadas y los pendientes están en `CONTEXT.md` y `docs/verification.md`. Generar el proyecto nativo no demuestra compilación, arranque ni conexión en Android/iOS. Windows no puede ejecutar Xcode; aún se requiere la comprobación macOS.
+Las evidencias ejecutadas y los pendientes están en `CONTEXT.md` y `docs/verification.md`. La ejecución #4 de GitHub Actions aprobó los ocho jobs, incluidas las compilaciones Android e iOS Simulator para dev/staging/prod, y 58 pruebas Flutter. Además, el [segundo humo Android dev](https://github.com/MarcoPorras123/lazo/actions/runs/40611649473) aprobó el arranque y la conexión app → `system.ping` con emuladores, tras corregir la inicialización Firebase predeterminada DEMO en `300c79b`. Las compilaciones iOS y staging/prod todavía requieren verificar arranque y configuración real.
+
+## Humo nativo manual en GitHub Actions
+
+El workflow `.github/workflows/mobile-smoke.yml`, **Lazo native DEMO smoke**, inicia un Android Emulator API 34 y Firebase Emulator Suite en el mismo runner. Después ejecuta `integration_test/system_ping_test.dart` en la app dev. El helper `backend/scripts/ci/mobile-smoke.sh` exige el proyecto `demo-lazo` y hosts loopback; no requiere un proyecto Firebase real ni secretos.
+
+Se inicia desde Actions → Lazo native DEMO smoke → Run workflow → rama `main`, o mediante GitHub CLI con sesión autorizada:
+
+```sh
+gh workflow run mobile-smoke.yml --repo MarcoPorras123/lazo --ref main
+gh run list --workflow mobile-smoke.yml --repo MarcoPorras123/lazo
+gh run watch <RUN_ID> --repo MarcoPorras123/lazo --exit-status
+```
+
+El log Flutter se conserva durante siete días como artefacto `android-dev-demo-smoke`, cuando la ejecución alcanza esa fase. El alcance es Android dev → callable `system.ping` en emuladores DEMO. No acredita App Check real, Firebase dev cloud, staging/prod, iOS, firma ni distribución. El resultado comprobado de cada ejecución se registra en `docs/verification.md`.
 
 ## Referencias oficiales
 

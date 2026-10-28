@@ -1,11 +1,11 @@
 # CONTEXT.md — Lazo
 
-Última actualización: 2026-10-26 · Paso 1
+Última actualización: 2026-10-28 · Paso 1
 
 ## 1. Estado por paso
 | Paso | Estado | Fecha | Evidencia | Notas |
 |---|---|---|---|---|
-| 1 Fundamentos | implementado | 2026-10-26 | [Verificación](docs/verification.md):116 pruebas automatizadas PASS, análisis Flutter sin incidencias, compilación/lint Functions y ping/seed integrados en emuladores | Verificación local completada. Falta aceptación completa: arranque Android/iOS, humo app/dev real y CI remoto; proyectos Firebase no creados por decisión del usuario. |
+| 1 Fundamentos | implementado | 2026-10-28 | [Verificación](docs/verification.md):119 pruebas base + 1 humo nativo PASS; [CI #4](https://github.com/MarcoPorras123/lazo/actions/runs/40537922488) 8/8 PASS y [humo Android dev](https://github.com/MarcoPorras123/lazo/actions/runs/40611649473) PASS sobre 300c79b | Seis compilaciones Android/iOS y arranque Android dev con ping emulado comprobados. Falta arranque iOS/staging/prod y humo dev real; proyectos Firebase no creados por decisión del usuario. |
 | 2 Sistema de diseño | pendiente | | | |
 | 3 Identidad y mercados | pendiente | | | |
 | 4 Reservas | pendiente | | | |
@@ -77,7 +77,7 @@ Todas las colecciones siguientes están diseñadas; los permisos de la tabla son
 ### 3.2 Funciones y endpoints
 | Nombre | Tipo | Entrada | Salida | Alcance requerido | Idempotente | Estado |
 |---|---|---|---|---|---|---|
-| system.ping → system-ping | callable v2 | schemaVersion:1, idempotencyKey (16–128 caracteres A-Z/a-z/0-9/_/-) | schemaVersion:1, environment, version, serverTime UTC, correlationId UUID | sin sesión; App Check fuera del emulador | lectura; la misma clave no congela la hora | implementado; HTTP callable local probado; dev real pendiente |
+| system.ping → system-ping | callable v2 | schemaVersion:1, idempotencyKey (16–128 caracteres A-Z/a-z/0-9/_/-) | schemaVersion:1, environment, version, serverTime UTC, correlationId UUID | sin sesión; App Check fuera del emulador | lectura; la misma clave no congela la hora | implementado; HTTP local y app Android dev contra emulador probados; dev real pendiente |
 | outbox.dispatch → outbox-dispatch | Firestore onDocumentCreated | outbox/{eventId} | interna | identidad worker | ledger consumidor+evento y efecto atómicos | implementado |
 | outbox.retryPending → outbox-retryPending | programada cada minuto UTC | interna | barrido acotado | identidad worker | lease, backoff, ledger | implementado; Scheduler real pendiente |
 | jobs.runDue → jobs-runDue | Task Queue privada | schemaVersion:1, jobId | void | IAM worker; solo intención DEMO persistida | por jobId, transacción | implementado; Cloud Tasks real pendiente |
@@ -147,17 +147,17 @@ Tema Material3 provisional en apps/mobile/lib/app/theme.dart, color semilla #183
 | Funcionalidad | Implementada | Verificada (cómo) | Pendiente |
 |---|---|---|---|
 | Money/tiempo TypeScript | sí |41 pruebas unit/contratos del backend; incluye Madrid29/03/2026 y25/10/2026 | política comercial aprobada |
-| Money/tiempo Dart | sí | suite Flutter55/55 PASS; mismos fixtures, límites, rounding, Lima/Madrid | política comercial aprobada |
+| Money/tiempo Dart | sí | suite Flutter 58/58 PASS en CI #4; mismos fixtures, límites, rounding, Lima/Madrid | política comercial aprobada |
 | Idempotencia/auditoría/outbox | sí |14 pruebas emulador backend incl concurrencia, conflicto, rollback, duplicado, backoff, fallo, lease/desorden | alertas cloud y consumidores comerciales |
 | requireScope | esqueleto cerrado | tests alcance/mercado/local | identidad/permisos finales Paso3 |
 | Deferred jobs | DEMO transaccional + adaptador Tasks | test del worker/dedupe local | IAM/cola/Scheduler reales |
 | Reglas Firestore/Storage | denegación por defecto |2 pruebas Firestore negativas, incluso dueño simulado | nuevas reglas por recurso Paso3; pruebas Storage futuras |
-| system.ping | sí | callable HTTP emulador responde y rechaza contrato inválido | humo app/dispositivo y dev real |
-| App Flutter/variantes | código y configuración | flutter analyze sin incidencias y55/55 tests unit/widget PASS | compilación/arranque nativo Android e iOS |
+| system.ping | sí | callable HTTP emulador responde y rechaza contrato inválido; humo app Android dev → callable PASS | dev real y recorrido iOS |
+| App Flutter/variantes | código y configuración | flutter analyze sin incidencias y 58/58 tests PASS; CI #4 compiló Android/iOS Simulator dev/staging/prod; humo Android dev PASS | arranque iOS y staging/prod con configuración real |
 | Entornos | aliases DEMO, ejemplos, parámetros, guardias | arranque local; seed rechaza otro proyecto/host | crear dev/staging/prod y registrar apps |
 | Seed DEMO | sí |2 ejecuciones:2 locales/8 servicios/2 eventos procesados/2 recibos; sin duplicar; rechaza producción/host remoto | nada para emulador |
 | Guardias despliegue | sí |4/4 tests: aliases distintos, parámetros persistidos, cuentas por proyecto y protección prod | aprobación/configuración de recursos reales |
-| CI | workflow preparado | verificación local completada; estado remoto en [GitHub Actions](https://github.com/MarcoPorras123/lazo/actions) | primera ejecución remota y compilaciones Android/macOS |
+| CI | workflow ejecutado y aprobado | [CI #4](https://github.com/MarcoPorras123/lazo/actions/runs/40537922488) sobre 300c79b:8/8 jobs PASS; [humo nativo](https://github.com/MarcoPorras123/lazo/actions/runs/40611649473) PASS; 120 pruebas entre ambas ejecuciones | mantener evidencia al cambiar código; nube y firma fuera de estas pruebas |
 | Modelo/ADR/eventos | sí |43 colecciones,34 índices,7 ADR,21 eventos incluidos probe | mantener contratos al avanzar |
 
 ## 6. Integraciones externas
@@ -174,7 +174,7 @@ Tema Material3 provisional en apps/mobile/lib/app/theme.dart, color semilla #183
 | Secret Manager | pendiente | declaración sin valor; no se necesita secreto en Paso1 | módulo futuro |
 | FCM/Wallet/pagos | pendiente | proveedores, credenciales y contratos específicos | pasos5/7/8 |
 | PITR/exportaciones/alertas | pendiente | políticas, canales, bucket y restauración comprobada | plataforma/dueño |
-| GitHub / Actions | real / CI pendiente | repositorio público [MarcoPorras123/lazo](https://github.com/MarcoPorras123/lazo); comprobar resultados de cada ejecución | plataforma |
+| GitHub / Actions | real | repositorio público [MarcoPorras123/lazo](https://github.com/MarcoPorras123/lazo); CI #4 y humo Android dev aprobados; sin requisito faltante para compartir y leer | plataforma |
 
 ## 7. Decisiones pendientes y supuestos
 | Tema | Supuesto vigente | Qué falta decidir | Paso afectado |
@@ -187,8 +187,8 @@ Tema Material3 provisional en apps/mobile/lib/app/theme.dart, color semilla #183
 | Retención y replay | expiraciones90d no activan TTL | ventanas por endpoint/proveedor, conservación y baja |3/5/7/8/9/10 |
 | Datos personales de staff | proyecciones separadas diseñadas | campos mínimos permitidos por recorrido |3/4/6 |
 | Reglas comerciales | sin precios/premios/cancelaciones aprobadas | configuración versionada y fuente |4/5/6/9 |
-| Firma y ejecución nativa | Windows sin AndroidSDK configurado, sin Xcode | SDK/licencias/dispositivo Android; macOS/Xcode/iOS runner |1/10 |
-| CI remoto | repositorio público MarcoPorras123/lazo, workflow versionado | revisar primera ejecución y corregir incidencias nativas si aparecen |1/10 |
+| Firma y ejecución nativa | CI compila Android/iOS tres variantes; arranque y humo Android dev DEMO aprobados | arranque iOS y staging/prod, humo dev real y firma de distribución |1/10 |
+| CI remoto | CI #4 verificado 8/8 PASS y humo separado PASS para 300c79b; 119+1 pruebas | mantener resultado al cambiar código; ampliar humo a iOS y nube cuando exista |1/10 |
 
 ## 8. Auditorías visuales
 | Fecha | Alcance | Hallazgos abiertos (bloqueante, alta, media, baja) | Informe |
@@ -207,7 +207,7 @@ Seed local: GCLOUD_PROJECT=demo-lazo y FIRESTORE_EMULATOR_HOST=127.0.0.1:8080, l
 Desde apps/mobile: flutter pub get --enforce-lockfile; dart run build_runner build --delete-conflicting-outputs; flutter gen-l10n; flutter analyze; flutter test.
 Ejecutar Android dev: flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=config/dev.emulator.json. iOS Simulator usa dev.emulator.ios.json. Staging/prod usan sus entradas y config/*.local.json completas; no apuntan por defecto a otro proyecto.
 
-Prueba app real: flutter test integration_test/system_ping_test.dart --flavor dev --dart-define-from-file=config/dev.emulator.json -d <dispositivo>. Contra dev real usar config/dev.local.json con USE_FIREBASE_EMULATORS=false y App Check configurado. Estas pruebas nativas quedan pendientes de dispositivo/SDK/proyecto.
+Prueba app real: flutter test integration_test/system_ping_test.dart --flavor dev --dart-define-from-file=config/dev.emulator.json -d <dispositivo>. Contra dev real usar config/dev.local.json con USE_FIREBASE_EMULATORS=false y App Check configurado. Humo Android DEMO remoto: Actions → Lazo native DEMO smoke → Run workflow; comandos CLI en docs/mobile.md. La segunda ejecución sobre 300c79b aprobó arranque, navegación y respuesta tipada del ping. Dev real e iOS siguen pendientes.
 
 Despliegue: completar pasos/guardias de deployment.md, luego npm run deploy:checked -- dev (o staging/prod). No ejecutar con IDs demo. Nunca pegar secretos; Secret Manager y configuración por proveedor. El emulador no acredita IAM, App Check real, backups o CI verde.
 
@@ -218,3 +218,7 @@ Despliegue: completar pasos/guardias de deployment.md, luego npm run deploy:chec
 | 2026-10-26 |1 | continuación tras interrupciones de herramientas; emuladores y tests backend/reglas/ping/seed comprobados; CI/documentación y contexto creados |43 colecciones,34 índices,21 eventos,6 rutas; nube pendiente confirmada por usuario |
 | 2026-10-26 |1 | cierre local:116 pruebas PASS, Flutter analyze limpio; corrección aliases/params despliegue y seed completo; emuladores apagados automáticamente | ping UTC milisegundos/UUID, roles customer/barber/owner, fixtures inválidos compartidos; aceptación externa pendiente |
 | 2026-10-26 |1 | publicación solicitada por el dueño: repositorio público MarcoPorras123/lazo, documentación ampliada para el socio y configuración local excluida | contratos sin cambios; README, contribución, roadmap y enlace público |
+| 2026-10-26 |1 | CI #1 comprobado: Functions, Flutter e iOS tres variantes PASS; CI #2 detectó otro ajuste Android; resValues/shrinking/minSdk corregidos en eacb53f/5f0d57d, nueva CI pendiente de comprobar | contratos sin cambios; evidencia remota y configuración de compilación |
+| 2026-10-27 |1 | CI #3 sobre 5f0d57d verificado 8/8 PASS; humo Android DEMO 40447198850 compiló/instaló APK pero falló antes del diagnóstico, corrección pendiente | contratos sin cambios; evidencia CI y workflow manual de humo |
+| 2026-10-27 |1 | Inicialización Firebase DEMO corregida en 300c79b; CI #4 verificado 8/8 PASS con 119 pruebas, segundo humo 40611649473 en curso | diagnóstico de arranque saneado; contratos públicos sin cambios |
+| 2026-10-28 |1 | Cierre documental tras verificar humo 40611649473 aprobado el 27/10 a las 20:00 Lima: Android dev arranca y recibe system.ping emulado; 119 pruebas base + 1 nativa = 120 PASS; evidencia y enlaces públicos actualizados | contratos sin cambios; aceptación cloud/iOS/staging/prod pendiente según alcance documentado |
